@@ -51,7 +51,7 @@ Ensure you have the Java Runtime Environment 17 (JRE) or Java Development Kit 17
   ```
 
 ### Step 3: Dependencies
-TODO
+- TODO
 ---
 
 ## 2. Running the Application
