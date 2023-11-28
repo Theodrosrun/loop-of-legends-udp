@@ -50,6 +50,8 @@ Ensure you have the Java Runtime Environment 17 (JRE) or Java Development Kit 17
   chmod +x path/to/jar.jar
   ```
 
+### Step 3: Dependencies
+TODO
 ---
 
 ## 2. Running the Application
