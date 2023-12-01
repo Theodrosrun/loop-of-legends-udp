@@ -1,0 +1,22 @@
+@startuml
+participant "Client 1" as C1
+participant "Client 2" as C2
+participant "Client 3" as C3
+participant "Client 4" as C4
+participant "Server" as S
+
+== Client 1 Joins and Quits ==
+C1 -> S: JOIN
+S -> C1: DONE
+C1 -> S: QUIT
+S -> C1: DONE
+
+== Clients 2, 3, and 4 Join ==
+C2 -> S: JOIN
+S -> C2: DONE
+C3 -> S: JOIN
+S -> C3: DONE
+C4 -> S: JOIN
+S -> C4: DONE
+
+@enduml

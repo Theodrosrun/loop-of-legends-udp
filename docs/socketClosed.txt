@@ -1,0 +1,16 @@
+@startuml
+participant "Client" as C1
+participant "Server" as S
+
+C1 -> S: RADY
+S --> C1: STRT
+
+alt Socket is closed Unexpectedly
+    note over C1: Client detects\nsocket closure
+    C1 -> C1: Display Message\n"Connection Error:\nThe connection to the server\nhas been lost."
+else Socket is Open
+    C1 -> S: DIRE <direction>
+    S --> C1: UPTE <map>
+end
+
+@enduml

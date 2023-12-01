@@ -1,0 +1,91 @@
+@startuml
+
+participant Client1 as C1
+participant Client2 as C2
+participant Client3 as C3
+participant Client4 as C4
+participant Server as S
+
+== Connection Establishment ==
+C1-> S: INIT
+S-> C1: DONE
+C2-> S: INIT
+S-> C2: DONE
+C3-> S: INIT
+S-> C3: DONE
+C4-> S: INIT
+S-> C4: DONE
+
+== Joining Game ==
+C1-> S: LOBB
+S-> C1: DONE
+C1-> S: JOIN
+S-> C1: DONE
+C2-> S: LOBB
+S-> C2: DONE
+C2-> S: JOIN
+S-> C2: DONE
+C3-> S: LOBB
+S-> C3: DONE
+C3-> S: JOIN
+S-> C3: DONE
+C4-> S: LOBB
+S-> C4: DONE
+C4-> S: JOIN
+S-> C4: DONE
+
+== Game Preparation ==
+C1-> S: RADY
+C2-> S: RADY
+C3-> S: RADY
+C4-> S: RADY
+S-> C1: STRT
+S-> C2: STRT
+S-> C3: STRT
+S-> C4: STRT
+
+== In-Game Communication ==
+loop During Game
+    S-> C1: UPTE <map>
+    C1-> S: DIRE <direction>
+    S-> C1: UPTE <map>
+    S-> C2: UPTE <map>
+    C2-> S: DIRE <direction>
+    S-> C2: UPTE <map>
+    S-> C3: UPTE <map>
+    C3-> S: DIRE <direction>
+    S-> C3: UPTE <map>
+    S-> C4: UPTE <map>
+    C4-> S: DIRE <direction>
+    S-> C4: UPTE <map>
+end
+
+== Game End ==
+S-> C1: ENDD
+S-> C2: ENDD
+S-> C3: ENDD
+S-> C4: ENDD
+
+== Error Handling ==
+alt If Error Occurs
+    C1-> S: UNKN
+    S-> C1: EROR
+    C2-> S: UNKN
+    S-> C2: EROR
+    C3-> S: UNKN
+    S-> C3: EROR
+    C4-> S: UNKN
+    S-> C4: EROR
+end
+
+== Exiting Game ==
+C1-> S: QUIT
+S-> C1: DONE
+C2-> S: QUIT
+S-> C2: DONE
+C3-> S: QUIT
+S-> C3: DONE
+C4-> S: QUIT
+S-> C4: DONE
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+
+participant Client as C1
+participant Server as S
+
+== Connection Establishment ==
+C1-> S: INIT
+S-> C1: DONE
+
+== Joining Game ==
+C1-> S: LOBB
+S-> C1: DONE
+C1-> S: JOIN
+S-> C1: DONE
+
+== Game Preparation ==
+C1-> S: RADY
+S-> C1: STRT
+
+== In-Game Communication ==
+loop During Game
+    C1-> S: DIRE <direction>
+    S-> C1: UPTE <map>
+end
+
+== Game End ==
+S-> C1: ENDD
+
+== Error Handling ==
+alt If Error Occurs
+    C1-> S: UNKN
+    S-> C1: EROR
+end
+
+== Exiting Game ==
+C1-> S: QUIT
+S-> C1: DONE
+
+@enduml

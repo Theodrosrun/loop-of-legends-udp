@@ -1,0 +1,17 @@
+@startuml
+participant "Client 1" as C1
+participant "Client 2" as C2
+participant "Server" as S
+
+== Username Already Taken Scenario ==
+C1 -> S: JOIN, Username="Player1"
+S -> C1: DONE
+
+note right of S: Username "Player1" is now registered
+
+C2 -> S: JOIN, Username="Player1"
+S -> C2: EROR "Username already taken"
+
+note right of C2: Client 2 tries to use the same username "Player1"
+
+@enduml

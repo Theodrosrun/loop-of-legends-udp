@@ -1,0 +1,27 @@
+@startuml
+participant "Client 1" as C1
+participant "Client 2" as C2
+participant "Client 3" as C3
+participant "Client 4" as C4
+participant "Server" as S
+
+== Lobby Full Scenario ==
+C1 -> S: JOIN
+S -> C1: DONE
+
+C2 -> S: JOIN
+S -> C2: DONE
+
+C3 -> S: JOIN
+S -> C3: DONE
+
+C4 -> S: JOIN
+S -> C4: DONE
+
+note right of S: Lobby is now full
+
+participant "Client 5" as C5
+C5 -> S: JOIN
+S -> C5: EROR "The lobby is full"
+
+@enduml
