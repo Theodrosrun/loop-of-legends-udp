@@ -4,7 +4,7 @@ import ch.heigvd.snake.Snake;
 
 import java.util.ArrayList;
 
-import static ch.heigvd.DIRECTION.*;
+import static ch.heigvd.Direction.*;
 /**
  * The class that represent the lobby
  */
@@ -193,7 +193,7 @@ public class Lobby {
      * @param player The player to set the direction
      * @param direction The direction to set
      */
-    public void setDirection(Player player, DIRECTION direction) {
+    public void setDirection(Player player, Direction direction) {
         player.getSnake().setNextDirection(direction);
     }
 

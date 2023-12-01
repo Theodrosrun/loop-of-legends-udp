@@ -128,7 +128,7 @@ public class ServerWorker implements Runnable {
                         break;
 
                     case DIRE:
-                        KEY key = KEY.valueOf(data);
+                        Key key = Key.valueOf(data);
                         server.setDirection(key, player);
                         break;
 

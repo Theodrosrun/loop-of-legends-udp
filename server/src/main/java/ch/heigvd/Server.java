@@ -53,7 +53,7 @@ public class Server {
     /**
      * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
      */
-    private DIRECTION[] directions = {DIRECTION.UP, DIRECTION.RIGHT, DIRECTION.DOWN, DIRECTION.LEFT};
+    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
 
     /**
      * The constructor
@@ -71,9 +71,9 @@ public class Server {
      * @param key    The key pressed by the player
      * @param player The player that pressed the key
      */
-    public void setDirection(KEY key, Player player) {
+    public void setDirection(Key key, Player player) {
         if (!lobby.everyPlayerReady()) return;
-        DIRECTION direction = DIRECTION.parseKey(key);
+        Direction direction = Direction.parseKey(key);
         if (direction != null) {
             lobby.setDirection(player, direction);
         }
@@ -163,7 +163,7 @@ public class Server {
 
             board = new Board(30, 15, 15, 200);
 
-            //loop for lobby
+            // Loop for lobby
             lobby.open();
             while (!lobby.everyPlayerReady()) {
                 board.deployLobby(lobby);
@@ -178,8 +178,8 @@ public class Server {
             listenNewClient = false;
             thListener.interrupt();
 
+            // Loop for game
             ArrayList<Position> generatedFood = new ArrayList<>();
-            //loop for game
             while (lobby.getNbPlayer() > 0) {
                 board.initBoard();
                 generatedFood.clear();

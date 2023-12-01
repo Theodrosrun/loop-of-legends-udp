@@ -1,8 +1,8 @@
 package ch.heigvd.snake;
 
-import ch.heigvd.DIRECTION;
+import ch.heigvd.Direction;
 
-public enum BODY {
+public enum Body {
     VERTICAL {
         @Override
 
@@ -16,7 +16,7 @@ public enum BODY {
             return "━";
         }
     };
-    static char getBody(DIRECTION direction){
+    static char getBody(Direction direction){
         return switch (direction) {
             case UP, DOWN -> VERTICAL.toString().charAt(0);
             case LEFT, RIGHT -> HORIZONTAL.toString().charAt(0);

@@ -100,8 +100,8 @@ public class InputHandler {
      *
      * @return the current key
      */
-    public KEY getKey() {
-        return KEY.parseKeyStroke(key);
+    public Key getKey() {
+        return Key.parseKeyStroke(key);
     }
 
     /**

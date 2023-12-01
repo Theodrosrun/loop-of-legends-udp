@@ -3,7 +3,7 @@ package ch.heigvd;
 /**
  * The enum that represent the position on the map
  */
-public enum DIRECTION {
+public enum Direction {
     UP,
     DOWN,
     LEFT,
@@ -12,20 +12,20 @@ public enum DIRECTION {
     /**
      * The parser that convert a key to a direction
      */
-    public static DIRECTION parseKey(KEY key){
+    public static Direction parseKey(Key key){
 
         switch (key) {
             case UP -> {
-                return DIRECTION.UP;
+                return Direction.UP;
             }
             case DOWN -> {
-                return DIRECTION.DOWN;
+                return Direction.DOWN;
             }
             case LEFT -> {
-                return DIRECTION.LEFT;
+                return Direction.LEFT;
             }
             case RIGHT -> {
-                return DIRECTION.RIGHT;
+                return Direction.RIGHT;
             }
             default -> {
                 return null;
@@ -39,7 +39,7 @@ public enum DIRECTION {
      * @param direction The direction to get the coef
      * @return The coef of the direction
      */
-    public static int[] getCoef(DIRECTION direction){
+    public static int[] getCoef(Direction direction){
         return switch (direction) {
             case UP -> new int[]{0, -1};
             case DOWN -> new int[]{0, 1};

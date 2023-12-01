@@ -1,6 +1,6 @@
 package ch.heigvd.snake;
 
-import ch.heigvd.DIRECTION;
+import ch.heigvd.Direction;
 import ch.heigvd.Position;
 
 import java.util.ArrayList;
@@ -47,8 +47,8 @@ public class Snake {
         this.id = id;
         Position previousPosition = null;
         for (int i = initialLength; i > 0; --i) {
-            int x = initialPosition.getX() + i * DIRECTION.getCoef(initialPosition.getDirection())[0];
-            int y = initialPosition.getY() + i * DIRECTION.getCoef(initialPosition.getDirection())[1];
+            int x = initialPosition.getX() + i * Direction.getCoef(initialPosition.getDirection())[0];
+            int y = initialPosition.getY() + i * Direction.getCoef(initialPosition.getDirection())[1];
             Position position = new Position(x, y, initialPosition.getDirection(), getBodyRepresentation(initialPosition, previousPosition));
             previousPosition = position;
             body.add(position);
@@ -59,7 +59,7 @@ public class Snake {
      * Set the next direction of the snake
      * @param direction the next direction
      */
-    public void setNextDirection(DIRECTION direction) {
+    public void setNextDirection(Direction direction) {
         if (!verifyNextDirection(direction)) return;
         body.getFirst().setDirection(direction);
     }
@@ -68,7 +68,7 @@ public class Snake {
      * Get the direction of the snake
      * @return the direction of the snake
      */
-    public DIRECTION getDirection() {
+    public Direction getDirection() {
         return body.getFirst().getDirection();
     }
 
@@ -97,8 +97,8 @@ public class Snake {
         head.setRepresentation(getBodyRepresentation(head, head));
 
         Position newHead = new Position(
-                head.getX() + DIRECTION.getCoef(head.getDirection())[0],
-                head.getY() + DIRECTION.getCoef(head.getDirection())[1],
+                head.getX() + Direction.getCoef(head.getDirection())[0],
+                head.getY() + Direction.getCoef(head.getDirection())[1],
                 head.getDirection(), HEAD[id]);
         body.addFirst(newHead);
         if (!eat){
@@ -142,12 +142,12 @@ public class Snake {
      * @param direction the next direction
      * @return true if the next direction is valid, false otherwise
      */
-    private boolean verifyNextDirection(DIRECTION direction) {
+    private boolean verifyNextDirection(Direction direction) {
         return switch (direction) {
-            case UP -> getDirection() != DIRECTION.DOWN;
-            case DOWN -> getDirection() != DIRECTION.UP;
-            case LEFT -> getDirection() != DIRECTION.RIGHT;
-            case RIGHT -> getDirection() != DIRECTION.LEFT;
+            case UP -> getDirection() != Direction.DOWN;
+            case DOWN -> getDirection() != Direction.UP;
+            case LEFT -> getDirection() != Direction.RIGHT;
+            case RIGHT -> getDirection() != Direction.LEFT;
         };
     }
 
@@ -162,9 +162,9 @@ public class Snake {
             return HEAD[id];
         }
         if (position.getDirection() == previousPosition.getDirection()) {
-            return BODY.getBody(position.getDirection());
+            return Body.getBody(position.getDirection());
         } else {
-            return ANGLE.getAngle(position.getDirection(), previousPosition.getDirection());
+            return Angle.getAngle(position.getDirection(), previousPosition.getDirection());
         }
     }
 

@@ -1,8 +1,8 @@
 package ch.heigvd.snake;
 
-import ch.heigvd.DIRECTION;
+import ch.heigvd.Direction;
 
-public enum ANGLE {
+public enum Angle {
     UP_RIGHT {
         @Override
         public String toString() {
@@ -28,7 +28,7 @@ public enum ANGLE {
         }
     };
 
-    static char getAngle(DIRECTION direction, DIRECTION previousDirection){
+    static char getAngle(Direction direction, Direction previousDirection){
         return switch (direction) {
             case UP -> switch (previousDirection) {
                 case LEFT -> UP_RIGHT.toString().charAt(0);

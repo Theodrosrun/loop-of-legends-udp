@@ -139,8 +139,8 @@ public class Client {
     private void join() {
         terminal.clear();
         terminal.print(Intro.logo);
-        while (inputHandler.getKey() != KEY.ENTER) {
-            if (inputHandler.getKey() == KEY.QUIT) {
+        while (inputHandler.getKey() != Key.ENTER) {
+            if (inputHandler.getKey() == Key.QUIT) {
                 quit();
             }
             try {
@@ -182,7 +182,7 @@ public class Client {
                 }
                 inputHandler.restoreHandler();
                 inputHandler.resetKey();
-                while (inputHandler.getKey() != KEY.ENTER) {
+                while (inputHandler.getKey() != Key.ENTER) {
                     terminal.print(data + "\n" + "Press enter to continue\n");
                     try {
                         Thread.sleep(200);
@@ -209,19 +209,19 @@ public class Client {
         boolean isReady = false;
         try {
             while (!isReady) {
-                if (inputHandler.getKey() == KEY.READY) {
+                if (inputHandler.getKey() == Key.READY) {
                     command = Message.setCommand(Message.RADY);
                     serverOutput.write(command);
                     serverOutput.flush();
                     inputHandler.resetKey();
                     isReady = true;
                 }
-                else if (inputHandler.getKey() == KEY.HELP) {
+                else if (inputHandler.getKey() == Key.HELP) {
                     terminal.clear();
                     terminal.print(Help.Rules + "\n" + Help.Commands);
-                    requestKey(KEY.HELP);
+                    requestKey(Key.HELP);
                 }
-                if (inputHandler.getKey() == KEY.QUIT) {
+                if (inputHandler.getKey() == Key.QUIT) {
                     command = Message.setCommand(Message.QUIT);
                     quit();
                 }
@@ -243,10 +243,10 @@ public class Client {
      */
     private void controlSnake() {
         try {
-            while (inputHandler.getKey() != KEY.QUIT) {
+            while (inputHandler.getKey() != Key.QUIT) {
                 KeyStroke key = inputHandler.getKeyStroke();
                 if (InputHandler.isDirection(key)) {
-                    command = Message.setCommand(Message.DIRE, KEY.parseKeyStroke(key).toString());
+                    command = Message.setCommand(Message.DIRE, Key.parseKeyStroke(key).toString());
                     serverOutput.write(command);
                     serverOutput.flush();
                     inputHandler.resetKey();
@@ -287,7 +287,7 @@ public class Client {
         terminal.clear();
         terminal.print(data + "\n" + "Press enter to exit\n");
 
-        while (inputHandler.getKey() != KEY.ENTER) {
+        while (inputHandler.getKey() != Key.ENTER) {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
@@ -326,14 +326,14 @@ public class Client {
      * Request the user to press enter
      */
     private void requestEnter() {
-        requestKey(KEY.ENTER);
+        requestKey(Key.ENTER);
     }
 
     /**
      * Request the user to press a key
      * @param key the key to press
      */
-    private void requestKey(KEY key){
+    private void requestKey(Key key){
         inputHandler.resetKey();
         while (inputHandler.getKey() != key) {
             inputHandler.restoreHandler();

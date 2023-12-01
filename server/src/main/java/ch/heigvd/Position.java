@@ -22,7 +22,7 @@ public class Position {
     /**
      * The direction of the position
      */
-    private DIRECTION direction;
+    private Direction direction;
 
     /**
      * The representation of the position on board
@@ -49,7 +49,7 @@ public class Position {
      * @param direction The direction of the position
      * @param representation The representation of the position on board
      */
-    public Position(int x, int y, DIRECTION direction, char representation) {
+    public Position(int x, int y, Direction direction, char representation) {
         this.x = getRelativeX(x);
         this.y = getRelativeY(y);
         this.direction = direction;
@@ -84,7 +84,7 @@ public class Position {
      * get the direction of the position
      * @return The direction of the position
      */
-    public DIRECTION getDirection() {
+    public Direction getDirection() {
         return direction;
     }
 
@@ -92,7 +92,7 @@ public class Position {
      * set the direction of the position
      * @param direction The direction of the position
      */
-    public void setDirection(DIRECTION direction) {
+    public void setDirection(Direction direction) {
         this.direction = direction;
     }
 
