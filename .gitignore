@@ -31,6 +31,7 @@
 ## Maven
 .mvn/wrapper/maven-wrapper.jar
 target/
+dependency-reduced-pom.xml
 
 ## Windows
 
