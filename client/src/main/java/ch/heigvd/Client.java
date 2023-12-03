@@ -112,8 +112,9 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-        client.startReceiveMulticast();
         client.sendUnicast("Hello, I''m you're client bitch!");
+
+        client.startReceiveMulticast();
     }
 }
 

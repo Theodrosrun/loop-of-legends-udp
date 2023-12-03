@@ -40,6 +40,26 @@ public class Server {
         }
     }
 
+    private void receiveUnicast() {
+        while (true) {
+            try {
+                byte[] buffer = new byte[1024];
+                DatagramPacket packet = new DatagramPacket(
+                        buffer,
+                        buffer.length);
+                unicastSocket.receive(packet);
+
+                unicastExecutorService.submit(new ServerWorker(unicastSocket));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stopReceiveUnicast() {
+        unicastExecutorService.shutdown();
+    }
+
     // Passive discovery protocol pattern
     private void sendMulticast() {
         try {
@@ -67,26 +87,6 @@ public class Server {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void receiveUnicast() {
-        while (true) {
-            try {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(
-                        buffer,
-                        buffer.length);
-                unicastSocket.receive(packet);
-
-                unicastExecutorService.submit(new ServerWorker(unicastSocket));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void stopReceiveUnicast() {
-        unicastExecutorService.shutdown();
     }
 
     public static void main(String[] args) {
