@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 
 public class ServerWorker implements Runnable {
     private DatagramSocket socket;
@@ -13,7 +14,11 @@ public class ServerWorker implements Runnable {
     private int clientPort;
 
     public ServerWorker() {
-
+        try {
+            this.socket = new DatagramSocket(10000);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -21,7 +26,7 @@ public class ServerWorker implements Runnable {
         System.out.println("ServerWorker");
 
         while(true){
-            sendMessage(receiveMessage());
+            System.out.println(receiveMessage());
         }
     }
 

@@ -1,6 +1,11 @@
 package ch.heigvd;
 
+import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     private DatagramSocket socket;
@@ -9,11 +14,14 @@ public class Client {
 
     private int serverPort;
 
+    ScheduledExecutorService scheduler;
+
     public Client(String serverAddress, int serverPort) {
         try {
             this.socket = new DatagramSocket();
             this.serverAddress = InetAddress.getByName(serverAddress);
             this.serverPort = serverPort;
+            this.scheduler = Executors.newScheduledThreadPool(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -48,13 +56,23 @@ public class Client {
     }
 
     private void test() {
-        sendMessage("Test");
+        try{
+            scheduler.scheduleAtFixedRate(() -> {
+                sendMessage("I want to play bitch!");
+            }, 10000, 1, TimeUnit.MILLISECONDS);
+
+            // Keep the program running for a while
+            scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         System.out.println(receiveMessage());
     }
 
     public static void main(String[] args) {
         String serverAddress = "127.0.0.1";
-        int serverPort = 20000;
+        int serverPort = 10000;
 
         Client client = new Client(serverAddress, serverPort);
         client.test();
