@@ -33,21 +33,23 @@ public class Client {
         }
     }
 
-    public void receiveMessage() {
+    public String receiveMessage() {
         try {
             byte[] response = new byte[1024];
             DatagramPacket responsePacket = new DatagramPacket(
                     response,
                     response.length);
             socket.receive(responsePacket);
-            String message = new String(responsePacket.getData(), 0, responsePacket.getLength());
+            return new String(responsePacket.getData(), 0, responsePacket.getLength());
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 
     private void test() {
         sendMessage("Test");
+        System.out.println(receiveMessage());
     }
 
     public static void main(String[] args) {
