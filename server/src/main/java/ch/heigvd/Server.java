@@ -26,6 +26,7 @@ public class Server {
 
     private void start() {
         while (true) {
+            System.out.println("Server");
             new Thread(new ServerWorker()).start();
         }
     }
