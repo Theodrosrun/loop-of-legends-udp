@@ -43,7 +43,7 @@ public class Server {
         }
     }
 
-    private void receiveUnicast() {
+    private void acceptClient() {
         while (true) {
             try {
                 byte[] buffer = new byte[1024];
@@ -59,7 +59,7 @@ public class Server {
         }
     }
 
-    public void stopReceiveUnicast() {
+    public void stopAcceptingClient() {
         unicastExecutorService.shutdown();
     }
 
@@ -98,6 +98,6 @@ public class Server {
 
         Server server = new Server(unicastPort, multicastPort, multicastHost);
         server.sendMulticast();
-        server.receiveUnicast();
+        server.acceptClient();
     }
 }
