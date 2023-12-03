@@ -9,10 +9,10 @@ public class Client {
 
     private int serverPort;
 
-    public Client(InetAddress serverAdress, int serverPort) {
+    public Client(String serverAddress, int serverPort) {
         try {
             this.socket = new DatagramSocket();
-            this.serverAddress = serverAdress;
+            this.serverAddress = InetAddress.getByName(serverAddress);
             this.serverPort = serverPort;
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,43 +51,10 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        // Validate arguments
-        if (args.length == 0) {
-            args = new String[]{"127.0.0.1", "20000"};
-        }
-        else if (args.length != 2) {
-            System.err.println("Usage: client <address> <port>");
-            return;
-        }
+        String serverAddress = "127.0.0.1";
+        int serverPort = 20000;
 
-        InetAddress serverAdress;
-        int serverPort;
-
-        // Resolve the address
-        try {
-            serverAdress = InetAddress.getByName(args[0]);
-        } catch (UnknownHostException ex) {
-            System.err.println("Error: The address " + args[0] + " is unknown.");
-            return;
-        }
-
-        // Validate the port number
-        try {
-            serverPort = Integer.parseInt(args[1]);
-            if (serverPort < 0 || serverPort > 65535) {
-                System.err.println("Error: Port number must be between 0 and 65535.");
-                return;
-            }
-        } catch (NumberFormatException ex) {
-            System.err.println("Error: Port number must be an integer.");
-            return;
-        }
-
-        // Create the client
-        try {
-            Client client = new Client(serverAdress, serverPort);
-        } catch (Exception ex) {
-            System.err.println("Error creating the client: " + ex.getMessage());
-        }
+        Client client = new Client(serverAddress, serverPort);
+        client.test();
     }
 }

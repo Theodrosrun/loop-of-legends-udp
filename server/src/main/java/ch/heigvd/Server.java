@@ -7,18 +7,11 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class Server {
     private static final int NB_PLAYER = 4;
-
-    private final int port;
-
-    private final String host;
-
     private MulticastSocket multicastSocketEmitter;
 
     private ScheduledExecutorService scheduler;
 
     private Server(int port, String host) {
-        this.port = port;
-        this.host = host;
         this.scheduler = Executors.newScheduledThreadPool(NB_PLAYER);
         try {
             multicastSocketEmitter = new MulticastSocket(port);
@@ -38,20 +31,14 @@ public class Server {
     }
 
     private void start() {
-        int port = 31415;
-
         while (true) {
             new Thread(new ServerWorker()).start();
         }
     }
 
     public static void main(String[] args) {
+        String host = "239.1.1.1";
         int port = 20000;
-        String host = "9876";
-
-        if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        }
 
         (new Server(port, host)).start();
     }
