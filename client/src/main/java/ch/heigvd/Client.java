@@ -3,12 +3,6 @@ package ch.heigvd;
 import java.net.*;
 
 public class Client {
-    private final Terminal terminal = new Terminal();
-
-    private final InputHandler inputHandler = new InputHandler(terminal, 50);
-
-    private String command = "", response = "", message = "", data = "";
-
     private DatagramSocket socket;
 
     private InetAddress serverAddress;
@@ -50,6 +44,10 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void test() {
+        sendMessage("Test");
     }
 
     public static void main(String[] args) {
