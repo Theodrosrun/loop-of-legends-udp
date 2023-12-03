@@ -20,7 +20,7 @@ public class Server {
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
     private NetworkInterface multicastNetworkInterface;
-    private ScheduledExecutorService multicastScheduler;
+    private ScheduledExecutorService multicastScheduledExecutorService;
 
     private Server(int unicastPort, int multicastPort, String multicastHost) {
         try {
@@ -34,7 +34,7 @@ public class Server {
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduler = Executors.newScheduledThreadPool(NB_PLAYER);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(NB_PLAYER);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -62,8 +62,7 @@ public class Server {
 
     // Passive discovery protocol pattern
     private void sendMulticast() {
-        try {
-        multicastScheduler.scheduleAtFixedRate(() -> {
+        multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 String message = "Server is emitting";
 
@@ -80,13 +79,10 @@ public class Server {
                 throw new RuntimeException(e);
             }
         }, 1000, 1000, TimeUnit.MILLISECONDS);
+    }
 
-        // Keep the program running for a while
-        multicastScheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public void stopSendMulticast() {
+        multicastScheduledExecutorService.shutdown();
     }
 
     public static void main(String[] args) {

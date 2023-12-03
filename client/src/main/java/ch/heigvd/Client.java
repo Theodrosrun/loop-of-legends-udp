@@ -10,14 +10,14 @@ public class Client {
     private DatagramSocket unicastSocket;
     private InetAddress unicastServerAddress;
     private int unicastServerPort;
-    ScheduledExecutorService unicastScheduler;
+    private ScheduledExecutorService unicastScheduledExecutorService;
 
     // Multicast
     private MulticastSocket multicastSocket;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
     private NetworkInterface multicastNetworkInterface;
-    private ScheduledExecutorService multicastScheduler;
+    private ScheduledExecutorService multicastScheduledExecutorService;
 
     public Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
         try {
@@ -25,7 +25,7 @@ public class Client {
             this.unicastSocket = new DatagramSocket();
             this.unicastServerAddress = InetAddress.getByName(unicastServerAddress);
             this.unicastServerPort = unicastserverPort;
-            this.unicastScheduler = Executors.newScheduledThreadPool(1);
+            this.unicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
 
             // Multicast
             this.multicastSocket = new MulticastSocket(multicastPort);
@@ -33,7 +33,7 @@ public class Client {
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduler = Executors.newScheduledThreadPool(1);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -95,11 +95,11 @@ public class Client {
     }
 
     private void startReceiveMulticast() {
-        multicastScheduler.execute(this::receiveMulticast);
+        multicastScheduledExecutorService.execute(this::receiveMulticast);
     }
 
     private void stopReceiveMulticast() {
-        multicastScheduler.shutdown();
+        multicastScheduledExecutorService.shutdown();
     }
 
     public static void main(String[] args) {
@@ -112,9 +112,8 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-        client.sendUnicast("Hello, I''m you're client bitch!");
-
         client.startReceiveMulticast();
+        while(true)
+            client.sendUnicast("Hello, I''m you're client bitch!");
     }
 }
-
