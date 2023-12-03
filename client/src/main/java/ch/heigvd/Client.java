@@ -39,20 +39,6 @@ public class Client {
         }
     }
 
-    public String receiveUnicast() {
-        try {
-            byte[] receiveData = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(
-                    receiveData,
-                    receiveData.length);
-            unicastSocket.receive(packet);
-            return new String(packet.getData(), 0, packet.getLength());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public void sendUnicast(String message) {
         try {
             byte[] payload = message.getBytes();
@@ -64,6 +50,20 @@ public class Client {
             unicastSocket.send(commandPacket);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public String receiveUnicast() {
+        try {
+            byte[] receiveData = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(
+                    receiveData,
+                    receiveData.length);
+            unicastSocket.receive(packet);
+            return new String(packet.getData(), 0, packet.getLength());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -113,6 +113,7 @@ public class Client {
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
         client.startReceiveMulticast();
+        client.sendUnicast("Hello, I''m you're client bitch!");
     }
 }
 

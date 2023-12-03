@@ -3,24 +3,35 @@ package ch.heigvd;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
     private static final int NB_PLAYER = 4;
+
+    // Unicast
+    private DatagramSocket unicastSocket;
+    private ExecutorService unicastExecutorService;
+
+    // Mulitcast
     private MulticastSocket multicastSocket;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduler;
 
-    private Server(int port, String host) {
+    private Server(int unicastPort, int multicastPort, String multicastHost) {
         try {
+            // Unicast
+            this.unicastSocket = new DatagramSocket(unicastPort);
+            this.unicastExecutorService = Executors.newFixedThreadPool(NB_PLAYER);
+
             // Multicast
-            this.multicastSocket = new MulticastSocket(port);
-            this.multicastAddress = InetAddress.getByName(host);
-            this.multicastGroup = new InetSocketAddress(multicastAddress, port);
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = InetAddress.getByName(multicastHost);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
             this.multicastScheduler = Executors.newScheduledThreadPool(NB_PLAYER);
@@ -30,7 +41,7 @@ public class Server {
     }
 
     // Passive discovery protocol pattern
-    private void emitMulticast() {
+    private void sendMulticast() {
         try {
         multicastScheduler.scheduleAtFixedRate(() -> {
             try {
@@ -48,7 +59,7 @@ public class Server {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }, 10000, 1000, TimeUnit.MILLISECONDS);
+        }, 1000, 1000, TimeUnit.MILLISECONDS);
 
         // Keep the program running for a while
         multicastScheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
@@ -58,16 +69,36 @@ public class Server {
         }
     }
 
-    private void start() {
-        new Thread(new ServerWorker()).start();
+    private void receiveUnicast() {
+        while (true) {
+            try {
+                byte[] buffer = new byte[1024];
+                DatagramPacket packet = new DatagramPacket(
+                        buffer,
+                        buffer.length);
+                unicastSocket.receive(packet);
+
+                unicastExecutorService.submit(new ServerWorker(unicastSocket));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stopReceiveUnicast() {
+        unicastExecutorService.shutdown();
     }
 
     public static void main(String[] args) {
+        // Unicast
+        int unicastPort = 10000;
+
+        // Multicast
         String multicastHost = "239.1.1.1";
         int multicastPort = 20000;
 
-        Server server = new Server(multicastPort, multicastHost);
-        server.emitMulticast();
-        server.start();
+        Server server = new Server(unicastPort, multicastPort, multicastHost);
+        server.sendMulticast();
+        server.receiveUnicast();
     }
 }
