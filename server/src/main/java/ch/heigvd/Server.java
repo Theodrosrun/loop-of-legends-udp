@@ -9,7 +9,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
+    // Game configuration
     private static final int NB_PLAYER = 4;
+    private static final long INIT_DELAY = 1000;
+    private static final int PERIOD = 1000;
 
     // Unicast
     private DatagramSocket unicastSocket;
@@ -78,7 +81,7 @@ public class Server {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }, 1000, 1000, TimeUnit.MILLISECONDS);
+        }, INIT_DELAY, PERIOD, TimeUnit.MILLISECONDS);
     }
 
     public void stopSendMulticast() {
