@@ -1,6 +1,8 @@
 package ch.heigvd;
 
+import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,7 @@ public class Client {
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            this.multicastScheduler = Executors.newScheduledThreadPool(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -66,19 +69,39 @@ public class Client {
         }
     }
 
-    private void test() {
-        try{
-            unicastScheduler.scheduleAtFixedRate(() -> {
-                sendMessage("I want to play bitch!");
-            }, 10000, 1000, TimeUnit.MILLISECONDS);
+    // Passive discovery protocol pattern
+    private void listenAdvertisement() {
+        try {
+            byte[] receiveData = new byte[1024];
 
-            // Keep the program running for a while
-            unicastScheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
+            while (true) {
+                DatagramPacket packet = new DatagramPacket(
+                        receiveData,
+                        receiveData.length
+                );
+
+                multicastSocket.receive(packet);
+
+                String message = new String(
+                        packet.getData(),
+                        packet.getOffset(),
+                        packet.getLength(),
+                        StandardCharsets.UTF_8
+                );
+
+                System.out.println("Client received message: " + message);
+            }
+        } catch (Exception  e) {
             e.printStackTrace();
         }
+    }
 
-        System.out.println(receiveMessage());
+    private void startListeningAdvertisement() {
+        multicastScheduler.execute(this::listenAdvertisement);
+    }
+
+    private void stopListeningAdvertisement() {
+        multicastScheduler.shutdown();
     }
 
     public static void main(String[] args) {
@@ -91,7 +114,7 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-        client.test();
+        client.startListeningAdvertisement();
     }
 }
 

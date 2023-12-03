@@ -16,20 +16,21 @@ public class Server {
     private ScheduledExecutorService multicastScheduler;
 
     private Server(int port, String host) {
-        this.multicastScheduler = Executors.newScheduledThreadPool(NB_PLAYER);
         try {
-            multicastSocket = new MulticastSocket(port);
-            multicastAddress = InetAddress.getByName(host);
-            multicastGroup = new InetSocketAddress(multicastAddress, port);
-            multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
-            multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            // Multicast
+            this.multicastSocket = new MulticastSocket(port);
+            this.multicastAddress = InetAddress.getByName(host);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, port);
+            this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
+            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            this.multicastScheduler = Executors.newScheduledThreadPool(NB_PLAYER);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     // Passive discovery protocol pattern
-    private void advertisement () {
+    private void advertisement() {
         try {
         multicastScheduler.scheduleAtFixedRate(() -> {
             try {
