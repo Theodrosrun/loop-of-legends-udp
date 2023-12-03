@@ -1,11 +1,9 @@
 package ch.heigvd;
 
-import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Client {
     // Unicast
@@ -41,12 +39,26 @@ public class Client {
         }
     }
 
-    public void sendMessage(String message) {
+    public String receiveUnicast() {
         try {
-            byte[] command = message.getBytes();
+            byte[] receiveData = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(
+                    receiveData,
+                    receiveData.length);
+            unicastSocket.receive(packet);
+            return new String(packet.getData(), 0, packet.getLength());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void sendUnicast(String message) {
+        try {
+            byte[] payload = message.getBytes();
             DatagramPacket commandPacket = new DatagramPacket(
-                    command,
-                    command.length,
+                    payload,
+                    payload.length,
                     unicastServerAddress,
                     unicastServerPort);
             unicastSocket.send(commandPacket);
@@ -55,22 +67,8 @@ public class Client {
         }
     }
 
-    public String receiveMessage() {
-        try {
-            byte[] response = new byte[1024];
-            DatagramPacket responsePacket = new DatagramPacket(
-                    response,
-                    response.length);
-            unicastSocket.receive(responsePacket);
-            return new String(responsePacket.getData(), 0, responsePacket.getLength());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     // Passive discovery protocol pattern
-    private void listenAdvertisement() {
+    private void receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
 
@@ -96,11 +94,11 @@ public class Client {
         }
     }
 
-    private void startListeningAdvertisement() {
-        multicastScheduler.execute(this::listenAdvertisement);
+    private void startReceiveMulticast() {
+        multicastScheduler.execute(this::receiveMulticast);
     }
 
-    private void stopListeningAdvertisement() {
+    private void stopReceiveMulticast() {
         multicastScheduler.shutdown();
     }
 
@@ -114,7 +112,7 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-        client.startListeningAdvertisement();
+        client.startReceiveMulticast();
     }
 }
 

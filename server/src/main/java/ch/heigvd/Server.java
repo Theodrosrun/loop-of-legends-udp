@@ -30,11 +30,11 @@ public class Server {
     }
 
     // Passive discovery protocol pattern
-    private void advertisement() {
+    private void emitMulticast() {
         try {
         multicastScheduler.scheduleAtFixedRate(() -> {
             try {
-                String message = "Hello, from multicast emitter";
+                String message = "Server is emitting";
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
@@ -67,7 +67,7 @@ public class Server {
         int multicastPort = 20000;
 
         Server server = new Server(multicastPort, multicastHost);
-        server.advertisement();
+        server.emitMulticast();
         server.start();
     }
 }

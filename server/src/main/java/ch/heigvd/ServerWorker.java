@@ -24,29 +24,31 @@ public class ServerWorker implements Runnable {
     @Override
     public void run() {
         while(true){
-            System.out.println(receiveMessage());
+            System.out.println(receiveUnicast());
         }
     }
 
-    private String receiveMessage() {
-        byte[] receiveBuffer = new byte[1024];
-        DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+    private String receiveUnicast() {
         try {
-            unicastSocket.receive(receivePacket);
+            byte[] receiveData = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(
+                    receiveData,
+                    receiveData.length);
+            unicastSocket.receive(packet);
             // TODO - Avoid constant assignment
-            unicastClientAddress = receivePacket.getAddress();
-            unicastClientPort = receivePacket.getPort();
+            unicastClientAddress = packet.getAddress();
+            unicastClientPort = packet.getPort();
+            return new String(packet.getData(), 0, packet.getLength());
         } catch (IOException e) {
             return null;
         }
-        return new String(receivePacket.getData(), 0, receivePacket.getLength());
     }
 
-    private void sendMessage(String message) {
-        byte[] sendBuffer = message.getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, unicastClientAddress, unicastClientPort);
+    private void sendUnicast(String message) {
+        byte[] payload = message.getBytes();
+        DatagramPacket datagram = new DatagramPacket(payload, payload.length, unicastClientAddress, unicastClientPort);
         try {
-            unicastSocket.send(sendPacket);
+            unicastSocket.send(datagram);
         } catch (IOException e) {
             e.printStackTrace();
         }
