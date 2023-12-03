@@ -1,11 +1,7 @@
 package ch.heigvd;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -19,14 +15,6 @@ public class Server {
     private MulticastSocket multicastSocketEmitter;
 
     private ScheduledExecutorService scheduler;
-
-    private boolean listenNewClient = true;
-
-    private Lobby lobby = new Lobby(NB_PLAYER);
-
-    private Board board;
-
-    ArrayList<Thread> pool = new ArrayList<>();
 
     private Server(int port, String host) {
         this.port = port;
@@ -49,9 +37,15 @@ public class Server {
         }
     }
 
-    public static void main(String[] args) {
-        // TODO - Add check and Picocli command
+    private void start() {
+        int port = 31415;
 
+        while (true) {
+            new Thread(new ServerWorker()).start();
+        }
+    }
+
+    public static void main(String[] args) {
         int port = 20000;
         String host = "9876";
 

@@ -12,7 +12,7 @@ public class ServerWorker implements Runnable {
 
     private int clientPort;
 
-    public ServerWorker(InetAddress clientAdress, int clientPort) {
+    public ServerWorker() {
 
     }
 
