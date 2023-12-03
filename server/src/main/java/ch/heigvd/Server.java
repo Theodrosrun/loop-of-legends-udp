@@ -59,7 +59,7 @@ public class Server {
         }
     }
 
-    public void stopAcceptingClient() {
+    public void stopAcceptClient() {
         unicastExecutorService.shutdown();
     }
 
