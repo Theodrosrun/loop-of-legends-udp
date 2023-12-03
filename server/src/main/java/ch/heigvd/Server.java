@@ -120,6 +120,78 @@ public class Server {
     }
 
     /**
+     * Ask if the username is already in use
+     *
+     * @return true if the username is already in use
+     */
+    public boolean playerNameAlreadyInUse(String userName) {
+        return lobby.playerNameAlreadyInUse(userName);
+    }
+
+    /**
+     * Join the lobby
+     *
+     * @param player The player that wants to join the lobby
+     */
+    public void joinLobby(Player player) {
+        lobby.join(player);
+        board.deployLobby(lobby);
+    }
+
+    /**
+     * Ask if lobby is full
+     *
+     * @return true if lobby is full
+     */
+    public boolean isLobbyFull() {
+        return lobby.lobbyIsFull();
+    }
+
+    /**
+     * remove player from lobby
+     */
+    public void removePlayerFromLobby(Player player) {
+        lobby.removePlayer(player);
+    }
+
+    /**
+     * Get the infos of the lobby
+     *
+     * @return The infos of the lobby
+     */
+    public String getLobbyInfos() {
+        return lobby.getInfos();
+    }
+
+    /**
+     * Set the player ready
+     *
+     * @param player The player that is ready
+     */
+    public void setPlayerReady(Player player) {
+        lobby.setReady(player);
+        board.deployLobby(lobby);
+    }
+
+    /**
+     * Get the frequency that refresh the game in milliseconds
+     *
+     * @return The frequency that refresh the game in milliseconds
+     */
+    public int getGameFrequency() {
+        return GAME_FREQUENCY;
+    }
+
+    /**
+     * Get the board
+     *
+     * @return The board
+     */
+    public Board getBoard() {
+        return board;
+    }
+
+    /**
      * Set the direction of the player
      *
      * @param key    The key pressed by the player
@@ -134,75 +206,41 @@ public class Server {
     }
 
     /**
-     * Join the lobby
-     *
-     * @param player The player that wants to join the lobby
+     * Listen for new clients
      */
-    public void joinLobby(Player player) {
-        lobby.join(player);
-        board.deployLobby(lobby);
-    }
+    private void listenNewClient() {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            while (listenNewClient) {
+                LOG.log(Level.INFO, "Waiting for a new client on port {0}", port + " with PID: " + ProcessHandle.current().pid());
+                Socket clientSocket = serverSocket.accept();
 
-    /**
-     * Get the board
-     *
-     * @return The board
-     */
-    public Board getBoard() {
-        return board;
-    }
+                if (lobby.isOpen() && !lobby.lobbyIsFull()) {
+                    LOG.info("A new client has arrived. Starting a new thread and delegating work to a new servant...");
+                    Thread th = new Thread(new ServerWorker(clientSocket, this));
+                    pool.add(th);
+                    th.start();
+                    continue;
+                }
 
-    /**
-     * Ask if lobby is full
-     *
-     * @return true if lobby is full
-     */
-    public boolean isFull() {
-        return lobby.lobbyIsFull();
-    }
+                BufferedWriter serverOutput = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
 
-    /**
-     * remove player from lobby
-     */
-    public void removePlayer(Player player) {
-        lobby.removePlayer(player);
-    }
-
-    /**
-     * Set the player ready
-     *
-     * @param player The player that is ready
-     */
-    public void setReady(Player player) {
-        lobby.setReady(player);
-        board.deployLobby(lobby);
-    }
-
-    /**
-     * Ask if the username is already in use
-     *
-     * @return true if the username is already in use
-     */
-    public boolean playerNameAlreadyInUse(String userName) {
-        return lobby.playerNameAlreadyInUse(userName);
-    }
-
-    /**
-     * Get the frequency that refresh the game in milliseconds
-     *
-     * @return The frequency that refresh the game in milliseconds
-     */
-    public int getGameFrequency() {
-        return GAME_FREQUENCY;
-    }
-
-    /**
-     * Get the infos of the lobby
-     *
-     * @return The infos of the lobby
-     */
-    public String getInfos() {
-        return lobby.getInfos();
+                if (lobby.lobbyIsFull()) {
+                    LOG.log(Level.INFO, "The lobby is full. Rejecting the new client...");
+                    serverOutput.write(Message.setCommand(Message.EROR, "The lobby is full"));
+                    serverOutput.flush();
+                    clientSocket.close();
+                    continue;
+                } else {
+                    LOG.log(Level.INFO, "The lobby is closed. Rejecting the new client...");
+                    serverOutput.write(Message.setCommand(Message.EROR, "The lobby is closed"));
+                    serverOutput.flush();
+                    clientSocket.close();
+                    continue;
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -257,44 +295,6 @@ public class Server {
                     throw new RuntimeException(e);
                 }
             }
-        }
-    }
-
-    /**
-     * Listen for new clients
-     */
-    private void listenNewClient() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            while (listenNewClient) {
-                LOG.log(Level.INFO, "Waiting for a new client on port {0}", port + " with PID: " + ProcessHandle.current().pid());
-                Socket clientSocket = serverSocket.accept();
-
-                if (lobby.isOpen() && !lobby.lobbyIsFull()) {
-                    LOG.info("A new client has arrived. Starting a new thread and delegating work to a new servant...");
-                    Thread th = new Thread(new ServerWorker(clientSocket, this));
-                    pool.add(th);
-                    th.start();
-                    continue;
-                }
-
-                BufferedWriter serverOutput = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
-
-                if (lobby.lobbyIsFull()) {
-                    LOG.log(Level.INFO, "The lobby is full. Rejecting the new client...");
-                    serverOutput.write(Message.setCommand(Message.EROR, "The lobby is full"));
-                    serverOutput.flush();
-                    clientSocket.close();
-                    continue;
-                } else {
-                    LOG.log(Level.INFO, "The lobby is closed. Rejecting the new client...");
-                    serverOutput.write(Message.setCommand(Message.EROR, "The lobby is closed"));
-                    serverOutput.flush();
-                    clientSocket.close();
-                    continue;
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

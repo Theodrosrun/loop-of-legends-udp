@@ -94,7 +94,7 @@ public class ServerWorker implements Runnable {
                         break;
 
                     case LOBB:
-                        command = server.isFull() ?
+                        command = server.isLobbyFull() ?
                                 Message.setCommand(Message.EROR, "The lobby is full") :
                                 Message.setCommand(Message.DONE);
                         serverOutput.write(command);
@@ -102,7 +102,7 @@ public class ServerWorker implements Runnable {
                         break;
 
                     case JOIN:
-                        if (server.isFull()) {
+                        if (server.isLobbyFull()) {
                             serverOutput.write(Message.setCommand(Message.EROR, "The lobby is full"));
                             serverOutput.flush();
                             break;
@@ -124,7 +124,7 @@ public class ServerWorker implements Runnable {
                         break;
 
                     case RADY:
-                        server.setReady(player);
+                        server.setPlayerReady(player);
                         break;
 
                     case DIRE:
@@ -135,7 +135,7 @@ public class ServerWorker implements Runnable {
                     case QUIT:
                         serverOutput.write(Message.setCommand(Message.QUIT, "You left the game"));
                         serverOutput.flush();
-                        if (player != null) server.removePlayer(player);
+                        if (player != null) server.removePlayerFromLobby(player);
                         finished = true;
                         break;
 
@@ -179,7 +179,7 @@ public class ServerWorker implements Runnable {
 
             StringBuilder sb = new StringBuilder( server.getBoard().toString());
             sb.append("\n");
-            sb.append(server.getInfos());
+            sb.append(server.getLobbyInfos());
 
             String command = Message.setCommand(Message.UPTE, sb.toString());
 
