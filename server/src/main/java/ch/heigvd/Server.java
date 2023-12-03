@@ -39,14 +39,9 @@ public class Server {
     private final String host;
 
     /**
-     * Pool of thread
+     * The multicast socket emitter used to communicate with clients
      */
-    ArrayList<Thread> pool = new ArrayList<Thread>();
-
-    /**
-     * The lobby
-     */
-    private Lobby lobby = new Lobby(NB_PLAYER);
+    private MulticastSocket multicastSocketEmitter;
 
     /**
      * The boolean that indicates if the server is listening for new clients
@@ -54,19 +49,24 @@ public class Server {
     private boolean listenNewClient = true;
 
     /**
+     * The lobby
+     */
+    private Lobby lobby = new Lobby(NB_PLAYER);
+
+    /**
      * The board
      */
     private Board board;
 
-//    /**
-//     * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
-//     */
-//    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
-
     /**
-     * The multicast socket emitter used to communicate with clients
+     * Pool of thread
      */
-    private MulticastSocket multicastSocketEmitter;
+    ArrayList<Thread> pool = new ArrayList<Thread>();
+
+    //    /**
+    //     * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
+    //     */
+    //    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
 
     /**
      * The constructor
