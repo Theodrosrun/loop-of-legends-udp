@@ -7,15 +7,15 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 public class ServerWorker implements Runnable {
-    private DatagramSocket socket;
+    private DatagramSocket unicastSocket;
 
-    private InetAddress clientAddress;
+    private InetAddress unicastClientAddress;
 
-    private int clientPort;
+    private int unicastClientPort;
 
     public ServerWorker() {
         try {
-            this.socket = new DatagramSocket(10000);
+            this.unicastSocket = new DatagramSocket(10000);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
@@ -32,10 +32,10 @@ public class ServerWorker implements Runnable {
         byte[] receiveBuffer = new byte[1024];
         DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
         try {
-            socket.receive(receivePacket);
+            unicastSocket.receive(receivePacket);
             // TODO - Avoid constant assignment
-            clientAddress = receivePacket.getAddress();
-            clientPort = receivePacket.getPort();
+            unicastClientAddress = receivePacket.getAddress();
+            unicastClientPort = receivePacket.getPort();
         } catch (IOException e) {
             return null;
         }
@@ -44,9 +44,9 @@ public class ServerWorker implements Runnable {
 
     private void sendMessage(String message) {
         byte[] sendBuffer = message.getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, clientAddress, clientPort);
+        DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, unicastClientAddress, unicastClientPort);
         try {
-            socket.send(sendPacket);
+            unicastSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
         }
