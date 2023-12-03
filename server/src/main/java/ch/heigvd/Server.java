@@ -25,7 +25,7 @@ public class Server {
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
-    private Server(int unicastPort, int multicastPort, String multicastHost) {
+    Server(int unicastPort, int multicastPort, String multicastHost) {
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
@@ -59,7 +59,7 @@ public class Server {
         }
     }
 
-    public void stopAcceptClient() {
+    private void stopAcceptClient() {
         unicastExecutorService.shutdown();
     }
 
@@ -84,7 +84,7 @@ public class Server {
         }, INIT_DELAY, PERIOD, TimeUnit.MILLISECONDS);
     }
 
-    public void stopSendMulticast() {
+    private void stopSendMulticast() {
         multicastScheduledExecutorService.shutdown();
     }
 

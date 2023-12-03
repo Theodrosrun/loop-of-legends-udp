@@ -19,7 +19,7 @@ public class Client {
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
-    public Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
+    Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket();
@@ -39,7 +39,7 @@ public class Client {
         }
     }
 
-    public void sendUnicast(String message) {
+    private void sendUnicast(String message) {
         try {
             byte[] payload = message.getBytes();
             DatagramPacket commandPacket = new DatagramPacket(
@@ -53,7 +53,7 @@ public class Client {
         }
     }
 
-    public String receiveUnicast() {
+    private String receiveUnicast() {
         try {
             byte[] receiveData = new byte[1024];
             DatagramPacket packet = new DatagramPacket(

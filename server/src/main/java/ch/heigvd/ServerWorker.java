@@ -10,7 +10,7 @@ public class ServerWorker implements Runnable {
     private InetAddress unicastClientAddress;
     private int unicastClientPort;
 
-    public ServerWorker(DatagramSocket unicastSocket) {
+    ServerWorker(DatagramSocket unicastSocket) {
         this.unicastSocket = unicastSocket;
         this.unicastClientAddress = unicastSocket.getInetAddress();
         this.unicastClientPort = unicastSocket.getPort();
