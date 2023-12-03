@@ -3,8 +3,7 @@ package ch.heigvd;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -20,50 +19,85 @@ public class Server {
     private static final int NB_PLAYER = 4;
 
     /**
-     * The logger
-     */
-    private final static Logger LOG = Logger.getLogger(Server.class.getName());
-
-    /**
      * The frequency that refresh the game in milliseconds
      */
     private final int GAME_FREQUENCY = 200;
 
     /**
+     * The logger
+     */
+    private final static Logger LOG = Logger.getLogger(Server.class.getName());
+
+    /**
      * The port used by the server
      */
     private final int port;
+
+    /**
+     * The Subnet range/multicast address to use.
+     */
+    private final String host;
+
     /**
      * Pool of thread
      */
-
     ArrayList<Thread> pool = new ArrayList<Thread>();
+
     /**
      * The lobby
      */
     private Lobby lobby = new Lobby(NB_PLAYER);
+
     /**
      * The boolean that indicates if the server is listening for new clients
      */
     private boolean listenNewClient = true;
+
     /**
      * The board
      */
     private Board board;
+
+//    /**
+//     * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
+//     */
+//    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
+
     /**
-     * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
+     * The multicast socket emitter used to communicate with clients
      */
-    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
+    private MulticastSocket multicastSocketEmitter;
 
     /**
      * The constructor
      *
      * @param port The port used by the server
      */
-    private Server(int port) {
+    private Server(int port, String host) {
         this.port = port;
-    }
+        this.host = host;
 
+        try {
+            multicastSocketEmitter = new MulticastSocket(port);
+
+            // String myself = InetAddress.getLocalHost().getHostAddress() + ":" + port;
+            // System.out.println("Multicast emitter started (" + myself + ")");
+
+            // Convertit le nom d'hôte spécifié dans la variable host en une adresse IP
+            InetAddress multicastAddress = InetAddress.getByName(host);
+            // Représente le groupe multicast auquel le socket se joindra pour envoyer des messages.
+            InetSocketAddress group = new InetSocketAddress(multicastAddress, port);
+            // Récupère une interface réseau spécifique à l'aide de son nom (fourni par interfaceName).
+            // Ceci est important pour déterminer par quelle interface réseau les données multicast seront envoyées.
+            NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
+            // Fait rejoindre au socket multicast le groupe multicast spécifié sur l'interface réseau choisie.
+            // Cela permet au socket d'envoyer des paquets de données au groupe multicast sur l'interface réseau spécifiée.
+            multicastSocketEmitter.joinGroup(group, networkInterface);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Set the direction of the player
@@ -245,12 +279,16 @@ public class Server {
     }
 
     public static void main(String[] args) {
+        // TODO - Add check and Picocli command
+
         int port = 20000;
+        String host = "9876";
+
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         }
 
         System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
-        (new Server(port)).start();
+        (new Server(port, host)).start();
     }
 }
