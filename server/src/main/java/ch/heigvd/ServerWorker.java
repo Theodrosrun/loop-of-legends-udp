@@ -26,6 +26,7 @@ public class ServerWorker implements Runnable {
         DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
         try {
             socket.receive(receivePacket);
+            // TODO - Avoid constant assignment
             clientAddress = receivePacket.getAddress();
             clientPort = receivePacket.getPort();
         } catch (IOException e) {
