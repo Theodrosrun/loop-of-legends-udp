@@ -86,10 +86,6 @@ public class Server {
         this.scheduler = Executors.newScheduledThreadPool(4);
         try {
             multicastSocketEmitter = new MulticastSocket(port);
-
-            // String myself = InetAddress.getLocalHost().getHostAddress() + ":" + port;
-            // System.out.println("Multicast emitter started (" + myself + ")");
-
             // Convertit le nom d'hôte spécifié dans la variable host en une adresse IP
             InetAddress multicastAddress = InetAddress.getByName(host);
             // Représente le groupe multicast auquel le socket se joindra pour envoyer des messages.
