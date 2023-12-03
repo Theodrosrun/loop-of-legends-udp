@@ -6,20 +6,33 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
+    // Unicast
     private DatagramSocket unicastSocket;
-
     private InetAddress unicastServerAddress;
-
     private int unicastServerPort;
-
     ScheduledExecutorService unicastScheduler;
 
-    public Client(String unicastServerAddress, int unicastserverPort) {
+    // Multicast
+    private MulticastSocket multicastSocket;
+    private InetAddress multicastAddress;
+    private InetSocketAddress multicastGroup;
+    private NetworkInterface multicastNetworkInterface;
+    private ScheduledExecutorService multicastScheduler;
+
+    public Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
         try {
+            // Unicast
             this.unicastSocket = new DatagramSocket();
             this.unicastServerAddress = InetAddress.getByName(unicastServerAddress);
             this.unicastServerPort = unicastserverPort;
             this.unicastScheduler = Executors.newScheduledThreadPool(1);
+
+            // Multicast
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = InetAddress.getByName(multicastHost);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
+            this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
+            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -69,10 +82,15 @@ public class Client {
     }
 
     public static void main(String[] args) {
+        // Unicast
         String unicastServerAddress = "127.0.0.1";
         int unicastServerPort = 10000;
 
-        Client client = new Client(unicastServerAddress, unicastServerPort);
+        // Mutlicast
+        String multicastHost = "239.1.1.1";
+        int multicastPort = 20000;
+
+        Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
         client.test();
     }
 }

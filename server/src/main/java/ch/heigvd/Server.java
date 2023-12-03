@@ -62,9 +62,11 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        String host = "239.1.1.1";
-        int port = 20000;
+        String multicastHost = "239.1.1.1";
+        int multicastPort = 20000;
 
-        (new Server(port, host)).start();
+        Server server = new Server(multicastPort, multicastHost);
+        server.advertisement();
+        server.start();
     }
 }
