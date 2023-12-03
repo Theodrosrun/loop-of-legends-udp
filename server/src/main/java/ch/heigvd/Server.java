@@ -7,6 +7,8 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,6 +47,11 @@ public class Server {
     private MulticastSocket multicastSocketEmitter;
 
     /**
+     * The scheduled Executor Service
+     */
+    private ScheduledExecutorService scheduler;
+
+    /**
      * The boolean that indicates if the server is listening for new clients
      */
     private boolean listenNewClient = true;
@@ -62,7 +69,7 @@ public class Server {
     /**
      * Pool of thread
      */
-    ArrayList<Thread> pool = new ArrayList<Thread>();
+    ArrayList<Thread> pool = new ArrayList<>();
 
     //    /**
     //     * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
@@ -77,7 +84,7 @@ public class Server {
     private Server(int port, String host) {
         this.port = port;
         this.host = host;
-
+        this.scheduler = Executors.newScheduledThreadPool(4);
         try {
             multicastSocketEmitter = new MulticastSocket(port);
 
@@ -94,7 +101,6 @@ public class Server {
             // Fait rejoindre au socket multicast le groupe multicast spécifié sur l'interface réseau choisie.
             // Cela permet au socket d'envoyer des paquets de données au groupe multicast sur l'interface réseau spécifiée.
             multicastSocketEmitter.joinGroup(group, networkInterface);
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
