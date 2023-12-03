@@ -53,7 +53,6 @@ public class Server {
             port = Integer.parseInt(args[0]);
         }
 
-        System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
         (new Server(port, host)).start();
     }
 }
