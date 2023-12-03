@@ -59,7 +59,7 @@ public class Client {
         try{
             scheduler.scheduleAtFixedRate(() -> {
                 sendMessage("I want to play bitch!");
-            }, 10000, 1, TimeUnit.MILLISECONDS);
+            }, 10000, 1000, TimeUnit.MILLISECONDS);
 
             // Keep the program running for a while
             scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);

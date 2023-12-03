@@ -23,8 +23,6 @@ public class ServerWorker implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("ServerWorker");
-
         while(true){
             System.out.println(receiveMessage());
         }
