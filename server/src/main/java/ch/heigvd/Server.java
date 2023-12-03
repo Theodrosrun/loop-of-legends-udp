@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,7 +90,7 @@ public class Server {
             InetSocketAddress group = new InetSocketAddress(multicastAddress, port);
             // Récupère une interface réseau spécifique à l'aide de son nom (fourni par interfaceName).
             // Ceci est important pour déterminer par quelle interface réseau les données multicast seront envoyées.
-            NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
+            NetworkInterface networkInterface = firstNetworkInterfaceAvailable(); // TODO - Handle null case
             // Fait rejoindre au socket multicast le groupe multicast spécifié sur l'interface réseau choisie.
             // Cela permet au socket d'envoyer des paquets de données au groupe multicast sur l'interface réseau spécifiée.
             multicastSocketEmitter.joinGroup(group, networkInterface);
@@ -97,6 +98,19 @@ public class Server {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private NetworkInterface firstNetworkInterfaceAvailable() throws SocketException {
+        Enumeration<NetworkInterface> interfacesReseau = NetworkInterface.getNetworkInterfaces();
+
+        while (interfacesReseau.hasMoreElements()) {
+            NetworkInterface interfaceReseau = interfacesReseau.nextElement();
+            if (interfaceReseau.isUp() && !interfaceReseau.isLoopback()) {
+                return interfaceReseau;
+            }
+        }
+
+        return null;
     }
 
     /**
