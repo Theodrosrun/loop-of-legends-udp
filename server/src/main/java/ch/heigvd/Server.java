@@ -25,10 +25,8 @@ public class Server {
     }
 
     private void start() {
-        while (true) {
-            System.out.println("Server");
-            new Thread(new ServerWorker()).start();
-        }
+        System.out.println("Server");
+        new Thread(new ServerWorker()).start();
     }
 
     public static void main(String[] args) {

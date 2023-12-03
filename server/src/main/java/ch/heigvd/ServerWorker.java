@@ -19,7 +19,10 @@ public class ServerWorker implements Runnable {
     @Override
     public void run() {
         System.out.println("ServerWorker");
-        sendMessage(receiveMessage());
+
+        while(true){
+            sendMessage(receiveMessage());
+        }
     }
 
     private String receiveMessage() {
