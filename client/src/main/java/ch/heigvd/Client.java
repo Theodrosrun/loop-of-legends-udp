@@ -13,14 +13,17 @@ public class Client {
      * The terminal
      */
     private final Terminal terminal = new Terminal();
+
     /**
      * The input handler used to get the user inputs
      */
     private final InputHandler inputHandler = new InputHandler(terminal, 50);
+
     /**
      * The command, response, message and data used to communicate with the server
      */
     private String command = "", response = "", message = "", data = "";
+
     /**
      * The output streams used to communicate with the server
      */
@@ -30,10 +33,16 @@ public class Client {
      * The input stream used to communicate with the server
      */
     private BufferedReader serverInput;
+
     /**
      * The socket used to communicate with the server
      */
     private Socket socket;
+
+    /**
+     * The multicast socket receiver used to communicate with the server
+     */
+    private Socket multicastSocketReceiver;
 
     /**
      * Constructor of the client
@@ -47,6 +56,24 @@ public class Client {
         join();
         waitReady();
         controlSnake();
+    }
+
+    /**
+     * Create the socket
+     *
+     * @param address the address of the server
+     * @param port    the port of the server
+     */
+    private void createSocket(InetAddress address, int port) {
+        try {
+            socket = new Socket(address, port);
+        }
+        catch (IOException e) {
+            terminal.print("Error creating the socket: " + e.getMessage() + "\n" + "Press enter to exit\n");
+            requestEnter();
+            exit(1);
+        }
+
     }
 
     /**
@@ -96,24 +123,6 @@ public class Client {
         } catch (IOException e) {
             exit(1);
         }
-    }
-
-    /**
-     * Create the socket
-     *
-     * @param address the address of the server
-     * @param port    the port of the server
-     */
-    private void createSocket(InetAddress address, int port) {
-        try {
-            socket = new Socket(address, port);
-        }
-        catch (IOException e) {
-            terminal.print("Error creating the socket: " + e.getMessage() + "\n" + "Press enter to exit\n");
-            requestEnter();
-            exit(1);
-        }
-
     }
 
     /**
