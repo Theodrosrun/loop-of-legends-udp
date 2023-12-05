@@ -15,7 +15,8 @@ public class Server {
     private static final int PERIOD = 1000;
 
     // Unicast
-    private static final int NB_THREADS = 1;
+    private static final int NB_EXECUTORS = 1;
+    private static final int NB_THREADS = 10;
     private DatagramSocket unicastSocket;
     private ExecutorService unicastExecutorService;
 
@@ -30,7 +31,7 @@ public class Server {
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
-            this.unicastExecutorService = Executors.newFixedThreadPool(NB_THREADS);
+            this.unicastExecutorService = Executors.newFixedThreadPool(NB_EXECUTORS);
 
             // Multicast
             this.multicastSocket = new MulticastSocket(multicastPort);
@@ -38,7 +39,7 @@ public class Server {
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(NB_THREADS);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(NB_EXECUTORS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,7 +54,7 @@ public class Server {
                         buffer.length);
                 unicastSocket.receive(packet);
 
-                unicastExecutorService.submit(new ServerReceiver(unicastSocket));
+                unicastExecutorService.submit(new ServerReceiver(unicastSocket, NB_THREADS));
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -4,16 +4,22 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ServerReceiver implements Runnable {
     private DatagramSocket unicastSocket;
     private InetAddress unicastClientAddress;
     private int unicastClientPort;
+    private ExecutorService executor;
 
-    ServerReceiver(DatagramSocket unicastSocket) {
+
+    ServerReceiver(DatagramSocket unicastSocket, int nbThreads) {
         this.unicastSocket = unicastSocket;
         this.unicastClientAddress = unicastSocket.getInetAddress();
         this.unicastClientPort = unicastSocket.getPort();
+        this.executor = Executors.newFixedThreadPool(nbThreads);
+
     }
 
     @Override
