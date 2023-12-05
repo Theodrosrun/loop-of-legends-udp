@@ -13,7 +13,6 @@ public class ServerReceiver implements Runnable {
     private int unicastClientPort;
     private ExecutorService executor;
 
-
     ServerReceiver(DatagramSocket unicastSocket, int nbThreads) {
         this.unicastSocket = unicastSocket;
         this.unicastClientAddress = unicastSocket.getInetAddress();
