@@ -15,8 +15,8 @@ public class Server {
     private static final int PERIOD = 1000;
 
     // Unicast
-    private static final int NB_EXECUTORS = 1;
-    private static final int NB_THREADS = 10;
+    private static final int UNICAST_NB_EXECUTORS = 1;
+    private static final int UNICAST_NB_THREADS = 10;
     private DatagramSocket unicastSocket;
     private ExecutorService unicastExecutorService;
 
@@ -31,7 +31,8 @@ public class Server {
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
-            this.unicastExecutorService = Executors.newFixedThreadPool(NB_EXECUTORS);
+            this.unicastExecutorService = Executors.newFixedThreadPool(UNICAST_NB_EXECUTORS);
+            this.unicastExecutorService.submit(new ServerReceiver(unicastSocket, UNICAST_NB_THREADS));
 
             // Multicast
             this.multicastSocket = new MulticastSocket(multicastPort);
@@ -39,30 +40,10 @@ public class Server {
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(NB_EXECUTORS);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void acceptClient() {
-        while (true) {
-            try {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(
-                        buffer,
-                        buffer.length);
-                unicastSocket.receive(packet);
-
-                unicastExecutorService.submit(new ServerReceiver(unicastSocket, NB_THREADS));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void stopAcceptClient() {
-        unicastExecutorService.shutdown();
     }
 
     // Passive discovery protocol pattern
@@ -100,6 +81,5 @@ public class Server {
 
         Server server = new Server(unicastPort, multicastPort, multicastHost);
         server.sendMulticast();
-        server.acceptClient();
     }
 }
