@@ -10,11 +10,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     // Game configuration
-    private static final int NB_THREADS = 1;
+    private static final int NB_PLAYERS = 4;
     private static final long INIT_DELAY = 1000;
     private static final int PERIOD = 1000;
 
     // Unicast
+    private static final int NB_THREADS = 1;
     private DatagramSocket unicastSocket;
     private ExecutorService unicastExecutorService;
 
