@@ -5,12 +5,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-public class ServerWorker implements Runnable {
+public class ServerReceiver implements Runnable {
     private DatagramSocket unicastSocket;
     private InetAddress unicastClientAddress;
     private int unicastClientPort;
 
-    ServerWorker(DatagramSocket unicastSocket) {
+    ServerReceiver(DatagramSocket unicastSocket) {
         this.unicastSocket = unicastSocket;
         this.unicastClientAddress = unicastSocket.getInetAddress();
         this.unicastClientPort = unicastSocket.getPort();

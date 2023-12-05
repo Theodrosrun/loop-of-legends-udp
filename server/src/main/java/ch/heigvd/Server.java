@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     // Game configuration
-    private static final int NB_PLAYER = 4;
+    private static final int NB_THREADS = 1;
     private static final long INIT_DELAY = 1000;
     private static final int PERIOD = 1000;
 
@@ -29,7 +29,7 @@ public class Server {
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
-            this.unicastExecutorService = Executors.newFixedThreadPool(NB_PLAYER);
+            this.unicastExecutorService = Executors.newFixedThreadPool(NB_THREADS);
 
             // Multicast
             this.multicastSocket = new MulticastSocket(multicastPort);
@@ -37,7 +37,7 @@ public class Server {
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
             this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(NB_PLAYER);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(NB_THREADS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -52,7 +52,7 @@ public class Server {
                         buffer.length);
                 unicastSocket.receive(packet);
 
-                unicastExecutorService.submit(new ServerWorker(unicastSocket));
+                unicastExecutorService.submit(new ServerReceiver(unicastSocket));
             } catch (IOException e) {
                 e.printStackTrace();
             }
