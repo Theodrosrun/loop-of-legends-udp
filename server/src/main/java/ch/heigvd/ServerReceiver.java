@@ -54,6 +54,11 @@ public class ServerReceiver implements Runnable {
                     receiveData,
                     receiveData.length);
             unicastSocket.receive(packet);
+
+            // Update at every receive
+            unicastClientAddress = packet.getAddress();
+            unicastClientPort = packet.getPort();
+
             return Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();

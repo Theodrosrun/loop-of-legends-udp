@@ -88,7 +88,7 @@ public class Client {
                         receiveData.length
                 );
                 multicastSocket.receive(packet);
-                System.out.println(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+                System.out.println(Message.getMessage(Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8))));
             }
         } catch (Exception  e) {
             e.printStackTrace();
