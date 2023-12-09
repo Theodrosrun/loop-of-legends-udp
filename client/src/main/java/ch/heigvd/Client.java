@@ -41,8 +41,6 @@ public class Client {
 
     private void run() {
         while(true){
-            String message = receiveMulticast();
-
             sendUnicast("Hello, I''m you're client bitch!");
         }
     }
@@ -76,7 +74,7 @@ public class Client {
     }
 
     // Passive discovery protocol pattern
-    private String receiveMulticast() {
+    private void receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
 
@@ -85,13 +83,11 @@ public class Client {
                         receiveData,
                         receiveData.length
                 );
-
                 multicastSocket.receive(packet);
-                return new String(packet.getData(), packet.getOffset(), packet.getLength());
+                System.out.println(new String(packet.getData(), packet.getOffset(), packet.getLength()));
             }
         } catch (Exception  e) {
             e.printStackTrace();
-            return null;
         }
     }
 
