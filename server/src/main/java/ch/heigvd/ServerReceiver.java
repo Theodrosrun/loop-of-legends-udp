@@ -12,8 +12,10 @@ public class ServerReceiver implements Runnable {
     private InetAddress unicastClientAddress;
     private int unicastClientPort;
     private ExecutorService executor;
+    private Server server;
 
-    ServerReceiver(DatagramSocket unicastSocket, int nbThreads) {
+    ServerReceiver(Server server, DatagramSocket unicastSocket, int nbThreads) {
+        this.server = server;
         this.unicastSocket = unicastSocket;
         this.unicastClientAddress = unicastSocket.getInetAddress();
         this.unicastClientPort = unicastSocket.getPort();
@@ -58,7 +60,56 @@ public class ServerReceiver implements Runnable {
         }
     }
 
-    private void handleUnicastMessage(String message) {
-        System.out.println("Traitement du message: " + message);
+    private void handleUnicastMessage(String msg) {
+        String message = Message.getMessage(msg);
+        String data = Message.getData(msg);
+
+        switch (Message.fromString(message)) {
+            case INIT:
+                sendUnicast(Message.setCommand(Message.DONE));
+                break;
+
+            case LOBB:
+//                sendUnicast(server.isFull() ?
+//                        Message.setCommand(Message.EROR, "The lobby is full") :
+//                        Message.setCommand(Message.DONE));
+                break;
+
+            case JOIN:
+//                if (server.isFull()) {
+//                    sendUnicast(Message.setCommand(Message.EROR, "The lobby is full"));
+//                    break;
+//                } else if (server.playerNameAlreadyInUse(data)) {
+//                    sendUnicast(Message.setCommand(Message.REPT, "Username already used"));
+//                    break;
+//                } else if (data.isEmpty()) {
+//                    sendUnicast(Message.setCommand(Message.REPT, "Username must have minimum 1 character"));
+//
+//                    break;
+//                } else {
+//                    sendUnicast(Message.setCommand(Message.DONE));
+//                    server.joinLobby(player);
+//                }
+                break;
+
+            case RADY:
+                // server.setReady(player);
+                break;
+
+            case DIRE:
+                Key key = Key.valueOf(data);
+                // server.setDirection(key, player);
+                break;
+
+            case QUIT:
+                sendUnicast(Message.setCommand(Message.QUIT, "You left the game"));
+                // server.removePlayer(player);
+                break;
+
+            case UNKN:
+
+            default:
+                break;
+        }
     }
 }

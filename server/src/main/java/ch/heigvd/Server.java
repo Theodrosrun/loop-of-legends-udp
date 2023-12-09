@@ -32,7 +32,7 @@ public class Server {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
             this.unicastExecutorService = Executors.newFixedThreadPool(UNICAST_NB_EXECUTORS);
-            this.unicastExecutorService.submit(new ServerReceiver(unicastSocket, UNICAST_NB_THREADS));
+            this.unicastExecutorService.submit(new ServerReceiver(this, unicastSocket, UNICAST_NB_THREADS));
 
             // Multicast
             this.multicastSocket = new MulticastSocket(multicastPort);
