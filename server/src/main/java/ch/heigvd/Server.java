@@ -12,7 +12,11 @@ public class Server {
     // Game configuration
     private static final int NB_PLAYERS = 4;
     private static final long INIT_DELAY = 1000;
-    private static final int PERIOD = 1000;
+    private static final int PERIOD = 200;
+    private Lobby lobby = new Lobby(NB_PLAYERS);
+    private boolean listenNewClient = true;
+    private Board board;
+    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
 
     // Unicast
     private static final int UNICAST_NB_EXECUTORS = 1;
@@ -69,6 +73,44 @@ public class Server {
 
     private void stopSendMulticast() {
         multicastScheduledExecutorService.shutdown();
+    }
+
+    public void joinLobby(Player player) {
+        lobby.join(player);
+        board.deployLobby(lobby);
+    }
+
+    public boolean isLobbyFull() {
+        return lobby.lobbyIsFull();
+    }
+
+    public String getLobbyInfos() {
+        return lobby.getInfos();
+    }
+
+    public void removePlayerFromLobby(Player player) {
+        lobby.removePlayer(player);
+    }
+
+    public void setPlayerReady(Player player) {
+        lobby.setReady(player);
+        board.deployLobby(lobby);
+    }
+
+    public boolean playerNameAlreadyInUse(String userName) {
+        return lobby.playerNameAlreadyInUse(userName);
+    }
+
+    public void setDirection(Key key, Player player) {
+        if (!lobby.everyPlayerReady()) return;
+        Direction direction = Direction.parseKey(key);
+        if (direction != null) {
+            lobby.setDirection(player, direction);
+        }
+    }
+
+    public Board getBoard() {
+        return board;
     }
 
     public static void main(String[] args) {

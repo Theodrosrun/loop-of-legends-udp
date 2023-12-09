@@ -76,40 +76,40 @@ public class ServerReceiver implements Runnable {
                 break;
 
             case LOBB:
-//                sendUnicast(server.isFull() ?
-//                        Message.setCommand(Message.EROR, "The lobby is full") :
-//                        Message.setCommand(Message.DONE));
+                sendUnicast(server.isLobbyFull() ?
+                        Message.setCommand(Message.EROR, "The lobby is full") :
+                        Message.setCommand(Message.DONE));
                 break;
 
             case JOIN:
-//                if (server.isFull()) {
-//                    sendUnicast(Message.setCommand(Message.EROR, "The lobby is full"));
-//                    break;
-//                } else if (server.playerNameAlreadyInUse(data)) {
-//                    sendUnicast(Message.setCommand(Message.REPT, "Username already used"));
-//                    break;
-//                } else if (data.isEmpty()) {
-//                    sendUnicast(Message.setCommand(Message.REPT, "Username must have minimum 1 character"));
-//
-//                    break;
-//                } else {
-//                    sendUnicast(Message.setCommand(Message.DONE));
-//                    server.joinLobby(player);
-//                }
+                if (server.isLobbyFull()) {
+                    sendUnicast(Message.setCommand(Message.EROR, "The lobby is full"));
+                    break;
+                } else if (server.playerNameAlreadyInUse(data)) {
+                    sendUnicast(Message.setCommand(Message.REPT, "Username already used"));
+                    break;
+                } else if (data.isEmpty()) {
+                    sendUnicast(Message.setCommand(Message.REPT, "Username must have minimum 1 character"));
+
+                    break;
+                } else {
+                    sendUnicast(Message.setCommand(Message.DONE));
+                    server.joinLobby(player);
+                }
                 break;
 
             case RADY:
-                // server.setReady(player);
+                server.setPlayerReady(player);
                 break;
 
             case DIRE:
                 Key key = Key.valueOf(data);
-                // server.setDirection(key, player);
+                 server.setDirection(key, player);
                 break;
 
             case QUIT:
                 sendUnicast(Message.setCommand(Message.QUIT, "You left the game"));
-                // server.removePlayer(player);
+                 server.removePlayerFromLobby(player);
                 break;
 
             case UNKN:
