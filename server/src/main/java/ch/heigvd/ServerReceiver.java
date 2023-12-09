@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,7 +35,7 @@ public class ServerReceiver implements Runnable {
 
     private void sendUnicast(String message) {
         try {
-            byte[] payload = message.getBytes();
+            byte[] payload = message.getBytes(StandardCharsets.UTF_8);
             DatagramPacket datagram = new DatagramPacket(
                     payload,
                     payload.length,
@@ -53,7 +54,7 @@ public class ServerReceiver implements Runnable {
                     receiveData,
                     receiveData.length);
             unicastSocket.receive(packet);
-            return new String(packet.getData(), 0, packet.getLength());
+            return Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
             return null;

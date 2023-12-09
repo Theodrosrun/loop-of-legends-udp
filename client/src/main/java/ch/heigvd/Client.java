@@ -6,11 +6,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class Client {
+    // Game
+    private final Terminal terminal = new Terminal();
+
     // Unicast
     private DatagramSocket unicastSocket;
     private InetAddress unicastServerAddress;
     private int unicastServerPort;
     private ScheduledExecutorService unicastScheduledExecutorService;
+    private String command = "", response = "", message = "", data = "";
 
     // Multicast
     private MulticastSocket multicastSocket;
@@ -41,13 +45,13 @@ public class Client {
 
     private void run() {
         while(true){
-            sendUnicast("Hello, I''m you're client bitch!");
+            initConnection();
         }
     }
 
     private void sendUnicast(String message) {
         try {
-            byte[] payload = message.getBytes();
+            byte[] payload = message.getBytes(StandardCharsets.UTF_8);
             DatagramPacket commandPacket = new DatagramPacket(
                     payload,
                     payload.length,
@@ -66,7 +70,7 @@ public class Client {
                     receiveData,
                     receiveData.length);
             unicastSocket.receive(packet);
-            return new String(packet.getData(), 0, packet.getLength());
+            return Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -84,7 +88,7 @@ public class Client {
                         receiveData.length
                 );
                 multicastSocket.receive(packet);
-                System.out.println(new String(packet.getData(), packet.getOffset(), packet.getLength()));
+                System.out.println(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
             }
         } catch (Exception  e) {
             e.printStackTrace();
@@ -97,6 +101,13 @@ public class Client {
 
     private void stopReceiveMulticast() {
         multicastScheduledExecutorService.shutdown();
+    }
+
+    private void initConnection() {
+        sendUnicast(Message.setCommand(Message.INIT));
+        while (!message.equals("DONE")) {
+            message = Message.getMessage(receiveUnicast());
+        }
     }
 
     public static void main(String[] args) {
