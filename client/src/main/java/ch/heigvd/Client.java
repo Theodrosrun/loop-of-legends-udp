@@ -85,7 +85,7 @@ public class Client {
     }
 
     // Passive discovery protocol pattern
-    private void receiveMulticast() {
+    private String receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
 
@@ -95,10 +95,12 @@ public class Client {
                         receiveData.length
                 );
                 multicastSocket.receive(packet);
-                System.out.println(Message.getMessage(Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8))));
+                return Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
             }
         } catch (Exception  e) {
             e.printStackTrace();
+            return null;
+
         }
     }
 

@@ -94,22 +94,22 @@ public class ServerReceiver implements Runnable {
                     break;
                 } else {
                     sendUnicast(Message.setCommand(Message.DONE));
-                    server.joinLobby(player);
+                    // server.joinLobby(player);
                 }
                 break;
 
             case RADY:
-                server.setPlayerReady(player);
+                // server.setPlayerReady(player);
                 break;
 
             case DIRE:
                 Key key = Key.valueOf(data);
-                 server.setDirection(key, player);
+                 // server.setDirection(key, player);
                 break;
 
             case QUIT:
                 sendUnicast(Message.setCommand(Message.QUIT, "You left the game"));
-                 server.removePlayerFromLobby(player);
+                 // server.removePlayerFromLobby(player);
                 break;
 
             case UNKN:
