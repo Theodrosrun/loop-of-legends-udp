@@ -125,12 +125,12 @@ public class Server {
               board = new Board(30, 15, 15, 200);
 //
 //            // Loop for lobby
-//            lobby.open();
+            lobby.open();
 //            while (!lobby.everyPlayerReady()) {
 //                board.deployLobby(lobby);
 //            }
-//            lobby.initSnakes(board);
-//            lobby.close();
+            lobby.initSnakes(board);
+            lobby.close();
 //            listenNewClient = false;
 //            thListener.interrupt();
 

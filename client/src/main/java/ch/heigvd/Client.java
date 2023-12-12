@@ -283,7 +283,7 @@ public class Client {
         client.initConnection();
         client.tryLobby();
         client.join();
-        client.waitReady();
+        // client.waitReady();
         client.controlSnake();
     }
 }
