@@ -3,6 +3,7 @@ package ch.heigvd;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -54,7 +55,7 @@ public class Server {
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
-                String message = "Server is emitting";
+                String message = getBoard().toString();
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
@@ -111,6 +112,46 @@ public class Server {
 
     public Board getBoard() {
         return board;
+    }
+
+    private void start() {
+        while (true) {
+//            listenNewClient = true;
+//            Thread thListener = new Thread(this::listenNewClient);
+//            thListener.start();
+//            board = new Board(30, 15, 15, 200);
+
+            // Loop for lobby
+            lobby.open();
+            while (!lobby.everyPlayerReady()) {
+                board.deployLobby(lobby);
+            }
+            lobby.initSnakes(board);
+            lobby.close();
+            listenNewClient = false;
+//            thListener.interrupt();
+
+            // Loop for game
+            ArrayList<Position> generatedFood = new ArrayList<>();
+            while (lobby.getNbPlayer() > 0) {
+                board.initBoard();
+                generatedFood.clear();
+                lobby.snakeStep();
+                for (Player player : lobby.getPlayers()) {
+                    if (!player.isAlive()) continue;
+                    for (Player opponent : lobby.getPlayers()) {
+                        if (player != opponent) {
+                            {
+                                generatedFood.addAll(opponent.getSnake().attack(player.getSnake()));
+                            }
+                        }
+                    }
+                }
+                board.setFood(generatedFood);
+                board.deploySnakes(lobby.getSnakes());
+                board.deployFood();
+            }
+        }
     }
 
     public static void main(String[] args) {
