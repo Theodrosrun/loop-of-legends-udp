@@ -187,10 +187,10 @@ public class Client {
                 command = Message.setCommand(Message.QUIT);
                 quit();
             }
-            response = receiveUnicast();
-            message = Message.getMessage(response);
-            data = Message.getData(response);
-            messageHandling(message, data);
+//            response = receiveUnicast();
+//            message = Message.getMessage(response);
+//            data = Message.getData(response);
+//            messageHandling(message, data);
             terminal.clear();
             terminal.print(data);
         }
@@ -283,7 +283,7 @@ public class Client {
         client.initConnection();
         client.tryLobby();
         client.join();
-        // client.waitReady();
+        client.waitReady();
         client.controlSnake();
     }
 }
