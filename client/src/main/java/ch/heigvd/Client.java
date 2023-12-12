@@ -44,16 +44,13 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    private void run() {
-        while(true){
-            initConnection();
-            tryLobby();
-            join();
-            waitReady();
-            controlSnake();
-        }
+        startReceiveMulticast();
+        initConnection();
+        tryLobby();
+        join();
+//        waitReady();
+        controlSnake();
     }
 
     private void sendUnicast(String message) {
@@ -213,7 +210,7 @@ public class Client {
                 sendUnicast(Message.setCommand(Message.DIRE, Key.parseKeyStroke(key).toString()));
                 inputHandler.resetKey();
             }
-            response = receiveUnicast();
+            response = receiveMulticast();
             message = Message.getMessage(response);
             data = Message.getData(response);
             messageHandling(message, data);
@@ -289,7 +286,5 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-        client.startReceiveMulticast();
-        client.run();
     }
 }

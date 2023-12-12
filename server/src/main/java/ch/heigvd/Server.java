@@ -55,7 +55,10 @@ public class Server {
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
-                String message = getBoard().toString();
+                StringBuilder sb = new StringBuilder(getBoard().toString());
+                sb.append("\n");
+                sb.append(getLobbyInfos());
+                String message = Message.setCommand(Message.UPTE, sb.toString());
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
@@ -133,6 +136,8 @@ public class Server {
 
             // Loop for game
             ArrayList<Position> generatedFood = new ArrayList<>();
+            board.initBoard();
+
             while (lobby.getNbPlayer() > 0) {
                 board.initBoard();
                 generatedFood.clear();
