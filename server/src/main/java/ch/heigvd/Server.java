@@ -169,5 +169,6 @@ public class Server {
 
         Server server = new Server(unicastPort, multicastPort, multicastHost);
         server.sendMulticast();
+        server.start();
     }
 }

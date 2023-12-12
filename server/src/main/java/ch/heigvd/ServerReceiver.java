@@ -9,6 +9,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ServerReceiver implements Runnable {
+    // Game configuration
+    private Player player;
+    // Unicast
     private DatagramSocket unicastSocket;
     private InetAddress unicastClientAddress;
     private int unicastClientPort;
@@ -94,22 +97,23 @@ public class ServerReceiver implements Runnable {
                     break;
                 } else {
                     sendUnicast(Message.setCommand(Message.DONE));
-                    // server.joinLobby(player);
+                    player = new Player(data);
+                    server.joinLobby(player);
                 }
                 break;
 
             case RADY:
-                // server.setPlayerReady(player);
+                server.setPlayerReady(player);
                 break;
 
             case DIRE:
                 Key key = Key.valueOf(data);
-                 // server.setDirection(key, player);
+                server.setDirection(key, player);
                 break;
 
             case QUIT:
                 sendUnicast(Message.setCommand(Message.QUIT, "You left the game"));
-                 // server.removePlayerFromLobby(player);
+                 server.removePlayerFromLobby(player);
                 break;
 
             case UNKN:

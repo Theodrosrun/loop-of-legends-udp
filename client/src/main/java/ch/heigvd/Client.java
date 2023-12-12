@@ -44,13 +44,6 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        startReceiveMulticast();
-        initConnection();
-        tryLobby();
-        join();
-//        waitReady();
-        controlSnake();
     }
 
     private void sendUnicast(String message) {
@@ -286,5 +279,11 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
+        client.startReceiveMulticast();
+        client.initConnection();
+        client.tryLobby();
+        client.join();
+        // client.waitReady();
+        client.controlSnake();
     }
 }
