@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 public class ServerReceiver implements Runnable {
     // Game configuration
     private Player player;
+
     // Unicast
     private DatagramSocket unicastSocket;
     private InetAddress unicastClientAddress;
