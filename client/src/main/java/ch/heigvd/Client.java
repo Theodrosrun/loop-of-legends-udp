@@ -172,7 +172,6 @@ public class Client {
 
         while (!isReady) {
             if (inputHandler.getKey() == Key.READY) {
-                command = Message.setCommand(Message.RADY);
                 sendUnicast(Message.setCommand(Message.RADY));
                 inputHandler.resetKey();
                 isReady = true;
@@ -183,13 +182,13 @@ public class Client {
                 requestKey(Key.HELP);
             }
             if (inputHandler.getKey() == Key.QUIT) {
-                command = Message.setCommand(Message.QUIT);
                 quit();
             }
-//            response = receiveUnicast();
-//            message = Message.getMessage(response);
-//            data = Message.getData(response);
-//            messageHandling(message, data);
+
+            response = receiveMulticast();
+            message = Message.getMessage(response);
+            data = Message.getData(response);
+            messageHandling(message, data);
             terminal.clear();
             terminal.print(data);
         }
@@ -282,7 +281,7 @@ public class Client {
         client.initConnection();
         client.tryLobby();
         client.join();
-//        client.waitReady();
+        client.waitReady();
         client.controlSnake();
     }
 }
