@@ -16,8 +16,7 @@ public class Server {
     private Lobby lobby = new Lobby(NB_PLAYERS);
     private boolean listenNewClient = true;
     private Board board;
-    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
-    private final int GAME_FREQUENCY = 200;
+    private static final int GAME_FREQUENCY = 200;
 
     // Unicast
     private static final int UNICAST_NB_EXECUTORS = 1;
@@ -28,7 +27,7 @@ public class Server {
     // Mulitcast
     private static final int MAX_PACKET_SIZE = 1024;
     private static final long INIT_DELAY = 100;
-    private static final int PERIOD = 100;
+    private static final int PERIOD = GAME_FREQUENCY / 2;
     private MulticastSocket multicastSocket;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
