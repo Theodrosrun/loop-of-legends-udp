@@ -20,7 +20,6 @@ public class Client {
     private String command = "", response = "", message = "", data = "";
 
     // Multicast
-    private static final int MAX_PACKET_SIZE = 1024;
     private MulticastSocket multicastSocket;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
