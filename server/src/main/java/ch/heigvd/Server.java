@@ -64,21 +64,13 @@ public class Server {
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
-                if (payload.length > MAX_PACKET_SIZE) {
-                    int offset = 0;
-                    while (offset < payload.length) {
-                        int length = Math.min(payload.length - offset, MAX_PACKET_SIZE);
-                        byte[] segment = Arrays.copyOfRange(payload, offset, offset + length);
+                DatagramPacket datagram = new DatagramPacket(
+                        payload,
+                        payload.length,
+                        multicastGroup
+                );
 
-                        DatagramPacket datagram = new DatagramPacket(segment, length, multicastGroup);
-                        multicastSocket.send(datagram);
-
-                        offset += length;
-                    }
-                } else {
-                    DatagramPacket datagram = new DatagramPacket(payload, payload.length, multicastGroup);
-                    multicastSocket.send(datagram);
-                }
+                multicastSocket.send(datagram);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

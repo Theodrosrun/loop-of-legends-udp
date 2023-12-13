@@ -77,21 +77,20 @@ public class Client {
 
     private String receiveMulticast() {
         try {
-            byte[] receiveData = new byte[65507];
-            StringBuilder messageBuilder = new StringBuilder();
+            byte[] receiveData = new byte[1024];
 
-            boolean endOfMessage = false;
-            while (!endOfMessage) {
-                DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+            while (true) {
+                DatagramPacket packet = new DatagramPacket(
+                        receiveData,
+                        receiveData.length
+                );
                 multicastSocket.receive(packet);
-                endOfMessage = packet.getLength() < MAX_PACKET_SIZE;
-                String segment = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
-                messageBuilder.append(segment);
+                return Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
             }
-            return Message.getResponse(messageBuilder.toString());
-        } catch (Exception e) {
+        } catch (Exception  e) {
             e.printStackTrace();
             return null;
+
         }
     }
 
