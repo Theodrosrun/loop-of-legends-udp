@@ -100,11 +100,12 @@ public class ServerReceiver implements Runnable {
                     sendUnicast(Message.setCommand(Message.DONE));
                     player = new Player(data);
                     server.joinLobby(player);
+                    server.setPlayerReady(player);
                 }
                 break;
 
             case RADY:
-                server.setPlayerReady(player);
+//                server.setPlayerReady(player);
                 break;
 
             case DIRE:

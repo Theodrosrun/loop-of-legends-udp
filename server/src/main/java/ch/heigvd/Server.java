@@ -125,9 +125,9 @@ public class Server {
 //
 //            // Loop for lobby
             lobby.open();
-//            while (!lobby.everyPlayerReady()) {
-//                board.deployLobby(lobby);
-//            }
+            while (!lobby.everyPlayerReady()) {
+                board.deployLobby(lobby);
+            }
             lobby.initSnakes(board);
             lobby.close();
 //            listenNewClient = false;
