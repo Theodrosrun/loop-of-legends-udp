@@ -51,7 +51,6 @@ public class Server {
         }
     }
 
-    // Passive discovery protocol pattern
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {

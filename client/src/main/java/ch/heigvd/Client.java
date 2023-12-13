@@ -74,7 +74,6 @@ public class Client {
         }
     }
 
-    // Passive discovery protocol pattern
     private String receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
