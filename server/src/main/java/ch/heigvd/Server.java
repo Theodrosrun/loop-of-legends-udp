@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     // Game configuration
-    private static final int NB_PLAYERS = 4;
+    private static final int NB_PLAYERS = 1;
     private static final long INIT_DELAY = 1000;
-    private static final int PERIOD = 200;
+    private static final int PERIOD = 100;
     private Lobby lobby = new Lobby(NB_PLAYERS);
     private boolean listenNewClient = true;
     private Board board;
