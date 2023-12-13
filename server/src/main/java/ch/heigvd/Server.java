@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,12 +13,11 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     // Game configuration
     private static final int NB_PLAYERS = 1;
-    private static final long INIT_DELAY = 1000;
-    private static final int PERIOD = 100;
     private Lobby lobby = new Lobby(NB_PLAYERS);
     private boolean listenNewClient = true;
     private Board board;
     private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
+    private final int GAME_FREQUENCY = 200;
 
     // Unicast
     private static final int UNICAST_NB_EXECUTORS = 1;
@@ -26,6 +26,9 @@ public class Server {
     private ExecutorService unicastExecutorService;
 
     // Mulitcast
+    private static final int MAX_PACKET_SIZE = 1024;
+    private static final long INIT_DELAY = 100;
+    private static final int PERIOD = 100;
     private MulticastSocket multicastSocket;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
@@ -61,13 +64,21 @@ public class Server {
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
-                DatagramPacket datagram = new DatagramPacket(
-                        payload,
-                        payload.length,
-                        multicastGroup
-                );
+                if (payload.length > MAX_PACKET_SIZE) {
+                    int offset = 0;
+                    while (offset < payload.length) {
+                        int length = Math.min(payload.length - offset, MAX_PACKET_SIZE);
+                        byte[] segment = Arrays.copyOfRange(payload, offset, offset + length);
 
-                multicastSocket.send(datagram);
+                        DatagramPacket datagram = new DatagramPacket(segment, length, multicastGroup);
+                        multicastSocket.send(datagram);
+
+                        offset += length;
+                    }
+                } else {
+                    DatagramPacket datagram = new DatagramPacket(payload, payload.length, multicastGroup);
+                    multicastSocket.send(datagram);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -135,8 +146,6 @@ public class Server {
 
             // Loop for game
             ArrayList<Position> generatedFood = new ArrayList<>();
-            board.initBoard();
-
             while (lobby.getNbPlayer() > 0) {
                 board.initBoard();
                 generatedFood.clear();
@@ -154,6 +163,12 @@ public class Server {
                 board.setFood(generatedFood);
                 board.deploySnakes(lobby.getSnakes());
                 board.deployFood();
+
+                try {
+                    Thread.sleep(GAME_FREQUENCY);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }

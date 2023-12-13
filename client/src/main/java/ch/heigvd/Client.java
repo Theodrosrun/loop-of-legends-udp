@@ -20,6 +20,7 @@ public class Client {
     private String command = "", response = "", message = "", data = "";
 
     // Multicast
+    private static final int MAX_PACKET_SIZE = 1024;
     private MulticastSocket multicastSocket;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
@@ -76,20 +77,21 @@ public class Client {
 
     private String receiveMulticast() {
         try {
-            byte[] receiveData = new byte[1024];
+            byte[] receiveData = new byte[65507];
+            StringBuilder messageBuilder = new StringBuilder();
 
-            while (true) {
-                DatagramPacket packet = new DatagramPacket(
-                        receiveData,
-                        receiveData.length
-                );
+            boolean endOfMessage = false;
+            while (!endOfMessage) {
+                DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
                 multicastSocket.receive(packet);
-                return Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+                endOfMessage = packet.getLength() < MAX_PACKET_SIZE;
+                String segment = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
+                messageBuilder.append(segment);
             }
-        } catch (Exception  e) {
+            return Message.getResponse(messageBuilder.toString());
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
-
         }
     }
 
