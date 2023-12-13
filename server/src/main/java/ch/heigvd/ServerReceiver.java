@@ -121,7 +121,6 @@ public class ServerReceiver implements Runnable {
             case UNKN:
 
             default:
-                System.out.println(message);
                 break;
         }
     }
