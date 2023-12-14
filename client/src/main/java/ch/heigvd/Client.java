@@ -83,22 +83,14 @@ public class Client {
     private void receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
-            String multiCastResponse;
-            board = "recieveMulticast() demarré";
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(
                         receiveData,
                         receiveData.length
                 );
-                board = "Après DatagramPacket";
                 multicastSocket.receive(packet);
-                board = "Après multicastSocket.receive(packet)";
-                multiCastResponse = Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
-                board = "Après Message.getResponse";
-               if (Message.getUUID(multiCastResponse).equals(serverUUID)) {
-                    board = Message.getData(multiCastResponse);
-                }
+                board = Message.getData(Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8)));
             }
         } catch (Exception  e) {
             board = "Exception dans recieveMulticast()";
@@ -203,11 +195,6 @@ public class Client {
 
             terminal.clear();
             terminal.print(board);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
