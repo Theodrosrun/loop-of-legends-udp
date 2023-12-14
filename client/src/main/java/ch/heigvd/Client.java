@@ -11,6 +11,7 @@ public class Client {
     // Game
     private final Terminal terminal = new Terminal();
     private final InputHandler inputHandler = new InputHandler(terminal, 50);
+    private String board;
 
     // Unicast
     private DatagramSocket unicastSocket;
@@ -74,7 +75,7 @@ public class Client {
         }
     }
 
-    private String receiveMulticast() {
+    private void receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
 
@@ -84,11 +85,10 @@ public class Client {
                         receiveData.length
                 );
                 multicastSocket.receive(packet);
-                return Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+                board = Message.getData(Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8)));
             }
         } catch (Exception  e) {
             e.printStackTrace();
-            return null;
 
         }
     }
@@ -185,12 +185,8 @@ public class Client {
                 quit();
             }
 
-            response = receiveMulticast();
-            message = Message.getMessage(response);
-            data = Message.getData(response);
-            messageHandling(message, data);
             terminal.clear();
-            terminal.print(data);
+            terminal.print(board);
         }
     }
 
@@ -201,12 +197,8 @@ public class Client {
                 sendUnicast(Message.setCommand(Message.DIRE, Key.parseKeyStroke(key).toString()));
                 inputHandler.resetKey();
             }
-            response = receiveMulticast();
-            message = Message.getMessage(response);
-            data = Message.getData(response);
-            messageHandling(message, data);
             terminal.clear();
-            terminal.print(data);
+            terminal.print(board);
         }
         quit();
     }
