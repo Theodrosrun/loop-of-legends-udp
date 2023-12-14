@@ -1,144 +1,125 @@
 package ch.heigvd;
 
 import com.googlecode.lanterna.input.KeyStroke;
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import static java.lang.System.*;
 
 public class Client {
-    /**
-     * The terminal
-     */
+    // Game
     private final Terminal terminal = new Terminal();
-    /**
-     * The input handler used to get the user inputs
-     */
     private final InputHandler inputHandler = new InputHandler(terminal, 50);
-    /**
-     * The command, response, message and data used to communicate with the server
-     */
+
+    // Unicast
+    private DatagramSocket unicastSocket;
+    private InetAddress unicastServerAddress;
+    private int unicastServerPort;
+    private ScheduledExecutorService unicastScheduledExecutorService;
     private String command = "", response = "", message = "", data = "";
-    /**
-     * The output streams used to communicate with the server
-     */
-    private BufferedWriter serverOutput;
 
-    /**
-     * The input stream used to communicate with the server
-     */
-    private BufferedReader serverInput;
-    /**
-     * The socket used to communicate with the server
-     */
-    private Socket socket;
+    // Multicast
+    private MulticastSocket multicastSocket;
+    private InetAddress multicastAddress;
+    private InetSocketAddress multicastGroup;
+    private NetworkInterface multicastNetworkInterface;
+    private ScheduledExecutorService multicastScheduledExecutorService;
 
-    /**
-     * Constructor of the client
-     *
-     * @param address the address of the server
-     * @param port    the port of the server
-     */
-    public Client(InetAddress address, int port) {
-        initConnection(address, port);
-        tryLobby();
-        join();
-        waitReady();
-        controlSnake();
-    }
-
-    /**
-     * Initialize the connection with the server
-     *
-     * @param address the address of the server
-     * @param port    the port of the server
-     */
-    private void initConnection(InetAddress address, int port) {
+    Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
         try {
-            Thread thConnection = new Thread(() -> createSocket(address, port));
-            thConnection.start();
-            int timeOutTime = 5; //secondes
-            while (timeOutTime > 0 && (socket == null || !socket.isConnected())) {
-                terminal.clear();
-                terminal.print("Connecting to the server... time out in  " + timeOutTime + "second" + (timeOutTime > 1 ? "s" : ""));
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                timeOutTime--;
-            }
-            thConnection.interrupt();
-            if (socket == null || !socket.isConnected()) {
-                terminal.clear();
-                terminal.print("Connection timeout\nPress enter to exit");
-                requestEnter();
-                exit(1);
-            }
-            serverOutput = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-            serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            // Unicast
+            this.unicastSocket = new DatagramSocket();
+            this.unicastServerAddress = InetAddress.getByName(unicastServerAddress);
+            this.unicastServerPort = unicastserverPort;
+            this.unicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
 
-            Thread exitTh = new Thread(new Exit(socket, serverOutput, serverInput));
-            Runtime.getRuntime().addShutdownHook(exitTh);
-
-            command = Message.setCommand(Message.INIT);
-            serverOutput.write(command);
-            serverOutput.flush();
-
-            while (!message.equals("DONE")) {
-                response = Message.getResponse(serverInput);
-                message = Message.getMessage(response);
-                data = Message.getData(response);
-                messageHandling(message, data);
-            }
-        } catch (IOException e) {
-            exit(1);
+            // Multicast
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = InetAddress.getByName(multicastHost);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
+            this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
+            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    /**
-     * Create the socket
-     *
-     * @param address the address of the server
-     * @param port    the port of the server
-     */
-    private void createSocket(InetAddress address, int port) {
+    private void sendUnicast(String message) {
         try {
-            socket = new Socket(address, port);
+            byte[] payload = message.getBytes(StandardCharsets.UTF_8);
+            DatagramPacket commandPacket = new DatagramPacket(
+                    payload,
+                    payload.length,
+                    unicastServerAddress,
+                    unicastServerPort);
+            unicastSocket.send(commandPacket);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (IOException e) {
-            terminal.print("Error creating the socket: " + e.getMessage() + "\n" + "Press enter to exit\n");
-            requestEnter();
-            exit(1);
-        }
-
     }
 
-    /**
-     * try if lobby is open or not full
-     */
+    private String receiveUnicast() {
+        try {
+            byte[] receiveData = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(
+                    receiveData,
+                    receiveData.length);
+            unicastSocket.receive(packet);
+            return Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String receiveMulticast() {
+        try {
+            byte[] receiveData = new byte[1024];
+
+            while (true) {
+                DatagramPacket packet = new DatagramPacket(
+                        receiveData,
+                        receiveData.length
+                );
+                multicastSocket.receive(packet);
+                return Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+            }
+        } catch (Exception  e) {
+            e.printStackTrace();
+            return null;
+
+        }
+    }
+
+    private void startReceiveMulticast() {
+        multicastScheduledExecutorService.execute(this::receiveMulticast);
+    }
+
+    private void stopReceiveMulticast() {
+        multicastScheduledExecutorService.shutdown();
+    }
+
+    private void initConnection() {
+        sendUnicast(Message.setCommand(Message.INIT));
+        while (!message.equals("DONE")) {
+            message = Message.getMessage(receiveUnicast());
+        }
+    }
+
     private void tryLobby() {
-        try {
-            serverOutput.write(Message.setCommand(Message.LOBB));
-            serverOutput.flush();
-            response = Message.getResponse(serverInput);
-            message = Message.getMessage(response);
-            data = Message.getData(response);
-            messageHandling(message, data);
-        } catch (IOException e) {
-            terminal.clear();
-            terminal.print("Client exception: " + e);
-        }
+        sendUnicast(Message.setCommand(Message.LOBB));
+        response = receiveUnicast();
+        message = Message.getMessage(response);
+        data = Message.getData(response);
+        messageHandling(message, data);
     }
 
-    /**
-     * Join the lobby
-     */
     private void join() {
         terminal.clear();
         terminal.print(Intro.logo);
+
         while (inputHandler.getKey() != Key.ENTER) {
             if (inputHandler.getKey() == Key.QUIT) {
                 quit();
@@ -152,138 +133,96 @@ public class Client {
 
         inputHandler.pauseHandler();
 
-        try {
-            while (true) {
-                String UserName = terminal.userInput();
+        while (true) {
+            String username = terminal.userInput();
 
-                if (UserName == null) {
-                    serverOutput.write(Message.setCommand(Message.QUIT));
-                    serverOutput.flush();
-                    exit(1);
-                }
+            sendUnicast(Message.setCommand(Message.JOIN, username));
 
-                if (socket.getInputStream().available() > 0) {
-                    response = Message.getResponse(serverInput);
-                    message = Message.getMessage(response);
-                    data = Message.getData(response);
-                    messageHandling(message, data);
-                }
+            response = receiveUnicast();
+            message = Message.getMessage(response);
+            data = Message.getData(response);
+            messageHandling(message, data);
 
-                command = Message.setCommand(Message.JOIN, UserName);
-                serverOutput.write(command);
-                serverOutput.flush();
-                response = Message.getResponse(serverInput);
-                message = Message.getMessage(response);
-                data = Message.getData(response);
-                messageHandling(message, data);
-
-                if (message.equals("DONE")) {
-                    break;
-                }
-                inputHandler.restoreHandler();
-                inputHandler.resetKey();
-                while (inputHandler.getKey() != Key.ENTER) {
-                    terminal.print(data + "\n" + "Press enter to continue\n");
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                inputHandler.pauseHandler();
-
+            if (message.equals("DONE")) {
+                break;
             }
-        } catch (IOException e) {
-            terminal.clear();
-            terminal.print("Client exception: " + e);
+
+            inputHandler.restoreHandler();
+            inputHandler.resetKey();
+
+            while (inputHandler.getKey() != Key.ENTER) {
+                terminal.print(data + "\n" + "Press enter to continue\n");
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            inputHandler.pauseHandler();
+
         }
 
         inputHandler.restoreHandler();
     }
 
-    /**
-     * Wait for the game to start
-     */
     private void waitReady() {
         inputHandler.resetKey();
         boolean isReady = false;
-        try {
-            while (!isReady) {
-                if (inputHandler.getKey() == Key.READY) {
-                    command = Message.setCommand(Message.RADY);
-                    serverOutput.write(command);
-                    serverOutput.flush();
-                    inputHandler.resetKey();
-                    isReady = true;
-                }
-                else if (inputHandler.getKey() == Key.HELP) {
-                    terminal.clear();
-                    terminal.print(Help.Rules + "\n" + Help.Commands);
-                    requestKey(Key.HELP);
-                }
-                if (inputHandler.getKey() == Key.QUIT) {
-                    command = Message.setCommand(Message.QUIT);
-                    quit();
-                }
-                response = Message.getResponse(serverInput);
-                message = Message.getMessage(response);
-                data = Message.getData(response);
-                messageHandling(message, data);
+
+        while (!isReady) {
+            if (inputHandler.getKey() == Key.READY) {
+                sendUnicast(Message.setCommand(Message.RADY));
+                inputHandler.resetKey();
+                isReady = true;
+            }
+            else if (inputHandler.getKey() == Key.HELP) {
                 terminal.clear();
-                terminal.print(data);
+                terminal.print(Help.Rules + "\n" + Help.Commands);
+                requestKey(Key.HELP);
+            }
+            if (inputHandler.getKey() == Key.QUIT) {
+                quit();
             }
 
-        } catch (IOException e) {
-            exit(1);
-        }
-    }
-
-    /**
-     * Control the snake
-     */
-    private void controlSnake() {
-        try {
-            while (inputHandler.getKey() != Key.QUIT) {
-                KeyStroke key = inputHandler.getKeyStroke();
-                if (InputHandler.isDirection(key)) {
-                    command = Message.setCommand(Message.DIRE, Key.parseKeyStroke(key).toString());
-                    serverOutput.write(command);
-                    serverOutput.flush();
-                    inputHandler.resetKey();
-                }
-                response = Message.getResponse(serverInput);
-                message = Message.getMessage(response);
-                data = Message.getData(response);
-                messageHandling(message, data);
-                terminal.clear();
-                terminal.print(data);
-            }
-            quit();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Quit the game
-     */
-    private void quit() {
-        command = Message.setCommand(Message.QUIT);
-        try {
-            serverOutput.write(command);
-            serverOutput.flush();
-            response = Message.getResponse(serverInput);
-        } catch (IOException e) {
+            response = receiveMulticast();
+            message = Message.getMessage(response);
+            data = Message.getData(response);
+            messageHandling(message, data);
             terminal.clear();
-            terminal.print("Client exception: " + e);
+            terminal.print(data);
         }
+    }
 
+    private void controlSnake() {
+        while (inputHandler.getKey() != Key.QUIT) {
+            KeyStroke key = inputHandler.getKeyStroke();
+            if (InputHandler.isDirection(key)) {
+                sendUnicast(Message.setCommand(Message.DIRE, Key.parseKeyStroke(key).toString()));
+                inputHandler.resetKey();
+            }
+            response = receiveMulticast();
+            message = Message.getMessage(response);
+            data = Message.getData(response);
+            messageHandling(message, data);
+            terminal.clear();
+            terminal.print(data);
+        }
+        quit();
+    }
+
+    private void quit() {
+        sendUnicast(Message.setCommand(Message.QUIT));
+
+        response = receiveUnicast();
         message = Message.getMessage(response);
         data = Message.getData(response);
+
         if (!message.equals("QUIT")) {
             terminal.print("Error :" + data);
             exit(1);
         }
+
         terminal.clear();
         terminal.print(data + "\n" + "Press enter to exit\n");
 
@@ -297,42 +236,24 @@ public class Client {
         exit(0);
     }
 
-    /**
-     * Handle the message
-     *
-     * @param message the message
-     * @param data    the data
-     */
     private void messageHandling(String message, String data) {
         switch (message) {
             case "EROR":
                 terminal.clear();
                 terminal.print("Error :" + data + "\n" + "Press enter to exit\n");
-                requestEnter();
+                requestKey(Key.ENTER);
                 exit(0);
                 break;
             case "QUIT":
                 terminal.clear();
                 terminal.print("Server left \n" + data + "\n" + "Press enter to exit\n");
-                requestEnter();
+                requestKey(Key.ENTER);
                 exit(0);
             default:
                 break;
         }
-
     }
 
-    /**
-     * Request the user to press enter
-     */
-    private void requestEnter() {
-        requestKey(Key.ENTER);
-    }
-
-    /**
-     * Request the user to press a key
-     * @param key the key to press
-     */
     private void requestKey(Key key){
         inputHandler.resetKey();
         while (inputHandler.getKey() != key) {
@@ -347,43 +268,20 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        // Validate arguments
-        if (args.length == 0) {
-            args = new String[]{"127.0.0.1", "20000"};
-        }
-        else if (args.length != 2) {
-            System.err.println("Usage: client <address> <port>");
-            return;
-        }
+        // Unicast
+        String unicastServerAddress = "127.0.0.1";
+        int unicastServerPort = 10000;
 
-        InetAddress address;
-        int port;
+        // Mutlicast
+        String multicastHost = "239.1.1.1";
+        int multicastPort = 20000;
 
-        // Resolve the address
-        try {
-            address = InetAddress.getByName(args[0]);
-        } catch (UnknownHostException ex) {
-            System.err.println("Error: The address " + args[0] + " is unknown.");
-            return;
-        }
-
-        // Validate the port number
-        try {
-            port = Integer.parseInt(args[1]);
-            if (port < 0 || port > 65535) {
-                System.err.println("Error: Port number must be between 0 and 65535.");
-                return;
-            }
-        } catch (NumberFormatException ex) {
-            System.err.println("Error: Port number must be an integer.");
-            return;
-        }
-
-        // Create the client
-        try {
-            Client client = new Client(address, port);
-        } catch (Exception ex) {
-            System.err.println("Error creating the client: " + ex.getMessage());
-        }
+        Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
+        client.startReceiveMulticast();
+        client.initConnection();
+        client.tryLobby();
+        client.join();
+        client.waitReady();
+        client.controlSnake();
     }
 }

@@ -1,76 +1,110 @@
 package ch.heigvd;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-/**
- * The class that represent the server
- */
 public class Server {
-    /**
-     * The number of players in the game
-     */
-    private static final int NB_PLAYER = 4;
-
-    /**
-     * The logger
-     */
-    private final static Logger LOG = Logger.getLogger(Server.class.getName());
-
-    /**
-     * The frequency that refresh the game in milliseconds
-     */
-    private final int GAME_FREQUENCY = 200;
-
-    /**
-     * The port used by the server
-     */
-    private final int port;
-    /**
-     * Pool of thread
-     */
-
-    ArrayList<Thread> pool = new ArrayList<Thread>();
-    /**
-     * The lobby
-     */
-    private Lobby lobby = new Lobby(NB_PLAYER);
-    /**
-     * The boolean that indicates if the server is listening for new clients
-     */
+    // Game configuration
+    private static final int NB_PLAYERS = 1;
+    private Lobby lobby = new Lobby(NB_PLAYERS);
     private boolean listenNewClient = true;
-    /**
-     * The board
-     */
     private Board board;
-    /**
-     * The directions initialized in the order UP, RIGHT, DOWN, LEFT for the first 4 players
-     */
-    private Direction[] directions = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
+    private static final int GAME_FREQUENCY = 200;
 
-    /**
-     * The constructor
-     *
-     * @param port The port used by the server
-     */
-    private Server(int port) {
-        this.port = port;
+    // Unicast
+    private static final int UNICAST_NB_EXECUTORS = 1;
+    private static final int UNICAST_NB_THREADS = 10;
+    private DatagramSocket unicastSocket;
+    private ExecutorService unicastExecutorService;
+
+    // Mulitcast
+    private static final int MAX_PACKET_SIZE = 1024;
+    private static final long INIT_DELAY = 100;
+    private static final int PERIOD = GAME_FREQUENCY / 2;
+    private MulticastSocket multicastSocket;
+    private InetAddress multicastAddress;
+    private InetSocketAddress multicastGroup;
+    private NetworkInterface multicastNetworkInterface;
+    private ScheduledExecutorService multicastScheduledExecutorService;
+
+    Server(int unicastPort, int multicastPort, String multicastHost) {
+        try {
+            // Unicast
+            this.unicastSocket = new DatagramSocket(unicastPort);
+            this.unicastExecutorService = Executors.newFixedThreadPool(UNICAST_NB_EXECUTORS);
+            this.unicastExecutorService.submit(new ServerReceiver(this, unicastSocket, UNICAST_NB_THREADS));
+
+            // Multicast
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = InetAddress.getByName(multicastHost);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
+            this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
+            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    private void sendMulticast() {
+        multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
+            try {
+                StringBuilder sb = new StringBuilder(getBoard().toString());
+                sb.append("\n");
+                sb.append(getLobbyInfos());
+                String message = Message.setCommand(Message.UPTE, sb.toString());
 
-    /**
-     * Set the direction of the player
-     *
-     * @param key    The key pressed by the player
-     * @param player The player that pressed the key
-     */
+                byte[] payload = message.getBytes(StandardCharsets.UTF_8);
+
+                DatagramPacket datagram = new DatagramPacket(
+                        payload,
+                        payload.length,
+                        multicastGroup
+                );
+
+                multicastSocket.send(datagram);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }, INIT_DELAY, PERIOD, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopSendMulticast() {
+        multicastScheduledExecutorService.shutdown();
+    }
+
+    public void joinLobby(Player player) {
+        lobby.join(player);
+        board.deployLobby(lobby);
+    }
+
+    public boolean isLobbyFull() {
+        return lobby.lobbyIsFull();
+    }
+
+    public String getLobbyInfos() {
+        return lobby.getInfos();
+    }
+
+    public void removePlayerFromLobby(Player player) {
+        lobby.removePlayer(player);
+    }
+
+    public void setPlayerReady(Player player) {
+        lobby.setReady(player);
+        board.deployLobby(lobby);
+    }
+
+    public boolean playerNameAlreadyInUse(String userName) {
+        return lobby.playerNameAlreadyInUse(userName);
+    }
+
     public void setDirection(Key key, Player player) {
         if (!lobby.everyPlayerReady()) return;
         Direction direction = Direction.parseKey(key);
@@ -79,104 +113,26 @@ public class Server {
         }
     }
 
-    /**
-     * Join the lobby
-     *
-     * @param player The player that wants to join the lobby
-     */
-    public void joinLobby(Player player) {
-        lobby.join(player);
-        board.deployLobby(lobby);
-    }
-
-    /**
-     * Get the board
-     *
-     * @return The board
-     */
     public Board getBoard() {
         return board;
     }
 
-    /**
-     * Ask if lobby is full
-     *
-     * @return true if lobby is full
-     */
-    public boolean isFull() {
-        return lobby.lobbyIsFull();
-    }
-
-    /**
-     * remove player from lobby
-     */
-    public void removePlayer(Player player) {
-        lobby.removePlayer(player);
-    }
-
-    /**
-     * Set the player ready
-     *
-     * @param player The player that is ready
-     */
-    public void setReady(Player player) {
-        lobby.setReady(player);
-        board.deployLobby(lobby);
-    }
-
-    /**
-     * Ask if the username is already in use
-     *
-     * @return true if the username is already in use
-     */
-    public boolean playerNameAlreadyInUse(String userName) {
-        return lobby.playerNameAlreadyInUse(userName);
-    }
-
-    /**
-     * Get the frequency that refresh the game in milliseconds
-     *
-     * @return The frequency that refresh the game in milliseconds
-     */
-    public int getGameFrequency() {
-        return GAME_FREQUENCY;
-    }
-
-    /**
-     * Get the infos of the lobby
-     *
-     * @return The infos of the lobby
-     */
-    public String getInfos() {
-        return lobby.getInfos();
-    }
-
-    /**
-     * Start the server
-     */
     private void start() {
-
         while (true) {
-            listenNewClient = true;
-            Thread thListener = new Thread(this::listenNewClient);
-            thListener.start();
-
-            board = new Board(30, 15, 15, 200);
-
-            // Loop for lobby
+//            listenNewClient = true;
+//            Thread thListener = new Thread(this::listenNewClient);
+//            thListener.start();
+              board = new Board(30, 15, 15, 200);
+//
+//            // Loop for lobby
             lobby.open();
             while (!lobby.everyPlayerReady()) {
                 board.deployLobby(lobby);
-                try {
-                    Thread.sleep(GAME_FREQUENCY);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
             }
             lobby.initSnakes(board);
             lobby.close();
-            listenNewClient = false;
-            thListener.interrupt();
+//            listenNewClient = false;
+//            thListener.interrupt();
 
             // Loop for game
             ArrayList<Position> generatedFood = new ArrayList<>();
@@ -197,6 +153,7 @@ public class Server {
                 board.setFood(generatedFood);
                 board.deploySnakes(lobby.getSnakes());
                 board.deployFood();
+
                 try {
                     Thread.sleep(GAME_FREQUENCY);
                 } catch (InterruptedException e) {
@@ -206,51 +163,16 @@ public class Server {
         }
     }
 
-    /**
-     * Listen for new clients
-     */
-    private void listenNewClient() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            while (listenNewClient) {
-                LOG.log(Level.INFO, "Waiting for a new client on port {0}", port + " with PID: " + ProcessHandle.current().pid());
-                Socket clientSocket = serverSocket.accept();
-
-                if (lobby.isOpen() && !lobby.lobbyIsFull()) {
-                    LOG.info("A new client has arrived. Starting a new thread and delegating work to a new servant...");
-                    Thread th = new Thread(new ServerWorker(clientSocket, this));
-                    pool.add(th);
-                    th.start();
-                    continue;
-                }
-
-                BufferedWriter serverOutput = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
-
-                if (lobby.lobbyIsFull()) {
-                    LOG.log(Level.INFO, "The lobby is full. Rejecting the new client...");
-                    serverOutput.write(Message.setCommand(Message.EROR, "The lobby is full"));
-                    serverOutput.flush();
-                    clientSocket.close();
-                    continue;
-                } else {
-                    LOG.log(Level.INFO, "The lobby is closed. Rejecting the new client...");
-                    serverOutput.write(Message.setCommand(Message.EROR, "The lobby is closed"));
-                    serverOutput.flush();
-                    clientSocket.close();
-                    continue;
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     public static void main(String[] args) {
-        int port = 20000;
-        if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        }
+        // Unicast
+        int unicastPort = 10000;
 
-        System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
-        (new Server(port)).start();
+        // Multicast
+        String multicastHost = "239.1.1.1";
+        int multicastPort = 20000;
+
+        Server server = new Server(unicastPort, multicastPort, multicastHost);
+        server.sendMulticast();
+        server.start();
     }
 }
