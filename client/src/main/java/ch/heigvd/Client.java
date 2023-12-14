@@ -42,7 +42,8 @@ public class Client {
             this.multicastSocket = new MulticastSocket(multicastPort);
             this.multicastAddress = InetAddress.getByName(multicastHost);
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
-            this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
+            NetworkInterfaceSelector selector = new NetworkInterfaceSelector();
+            this.multicastNetworkInterface = selector.selectNetworkInterface();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
             this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
         } catch (Exception e) {
