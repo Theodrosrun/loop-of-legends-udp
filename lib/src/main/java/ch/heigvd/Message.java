@@ -82,15 +82,17 @@ public enum Message {
 
     /**
      * Get the response from the server
-     * @param reader the reader
+     * @param input the reader
      * @return the response
      * @throws IOException if an I/O error occurs
      */
-    public static String getResponse(BufferedReader reader) throws IOException {
+    public static String getResponse(String input) {
         StringBuilder response = new StringBuilder();
         int c;
 
-        while ((c = reader.read()) != -1) {
+        for (int i = 0; i < input.length(); i++) {
+            c = input.charAt(i);
+
             if (c == EOT) {
                 break;
             }
