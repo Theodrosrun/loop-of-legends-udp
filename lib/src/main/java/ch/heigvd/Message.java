@@ -2,6 +2,7 @@ package ch.heigvd;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Enumeration of the different messages that can be sent by the server
@@ -63,11 +64,11 @@ public enum Message {
      * @param data the data
      * @return the command
      */
-    public static String setCommand(Message message, String data){
+    public static String setCommand(UUID uuid, Message message, String data){
         if (data == null) {
-            return message.toString() + EOT;
+            return uuid + SEPARATOR + message.toString() + EOT;
         } else {
-            return message.toString() + SEPARATOR + data + EOT;
+            return uuid + SEPARATOR + message.toString() + SEPARATOR + data + EOT;
         }
     }
 
@@ -76,8 +77,8 @@ public enum Message {
      * @param message the message
      * @return the command
      */
-    public static String setCommand(Message message) {
-        return setCommand(message, null);
+    public static String setCommand(UUID uuid, Message message) {
+        return setCommand(uuid, message, null);
     }
 
     /**
@@ -103,12 +104,21 @@ public enum Message {
     }
 
     /**
+     * Get the UUID from a string
+     * @param string the string
+     * @return the UUID
+     */
+    public static UUID getUUID(String string) {
+        return UUID.fromString(string.split(SEPARATOR, 3)[0]);
+    }
+
+    /**
      * Get the message from a string
      * @param string the string
      * @return the message
      */
     public static String getMessage(String string) {
-        return string.split(SEPARATOR, 2)[0];
+        return string.split(SEPARATOR, 3)[1];
     }
 
     /**
@@ -117,8 +127,8 @@ public enum Message {
      * @return the data
      */
     public static String getData(String string) {
-        String[] tab = string.split(SEPARATOR, 2);
-        return tab.length > 1 ? tab[1] : "";
+        String[] tab = string.split(SEPARATOR, 3);
+        return tab.length > 2 ? tab[2] : "";
     }
 
     @Override

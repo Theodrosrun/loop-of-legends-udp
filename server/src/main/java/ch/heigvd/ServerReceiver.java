@@ -29,12 +29,17 @@ public class ServerReceiver implements Runnable {
 
     /**
      * Initialize the threads
+     *
      * @param nbThreads number of threads to initialize
      */
     private void initThreads(int nbThreads) {
         for (int i = 0; i < nbThreads; i++) {
             threads.add(new Thread(this));
         }
+    }
+
+    private Player identifyPlayer(String message) {
+
     }
 
     @Override

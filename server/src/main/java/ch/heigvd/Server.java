@@ -3,6 +3,7 @@ package ch.heigvd;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +17,8 @@ public class Server {
     private boolean listenNewClient = true;
     private Board board;
     private static final int GAME_FREQUENCY = 200;
+
+    private final Lobby lobby = new Lobby(NB_PLAYERS);
 
     // Unicast
     private static final int UNICAST_NB_EXECUTORS = 1;
@@ -52,6 +55,15 @@ public class Server {
         }
     }
 
+    Player getPlayerByUUID(UUID uuid){
+        return lobby.getPlayerByUUID(uuid);
+    }
+
+    private void stopAcceptClient() {
+        unicastExecutorService.shutdown();
+    }
+
+    // Passive discovery protocol pattern
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {

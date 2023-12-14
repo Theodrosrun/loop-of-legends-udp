@@ -2,6 +2,8 @@ package ch.heigvd;
 
 import ch.heigvd.snake.Snake;
 
+import java.util.UUID;
+
 /**
  * The class that represent the player
  */
@@ -16,6 +18,11 @@ public class Player {
      * The id of the player
      */
     private final int id;
+
+    /**
+     * The UUID of the player
+     */
+    private final UUID uuid;
 
     /**
      * The snake of the player
@@ -36,9 +43,14 @@ public class Player {
      * Constructor
      * @param name The name of the player
      */
-    public Player(String name) {
+    public Player(String name, UUID uuid) {
+        this.uuid = uuid;
         this.id = ++idCnt;
         this.name = name;
+    }
+
+    public boolean identifyPlayer(UUID uuid){
+        return this.uuid.equals(uuid);
     }
 
     /**

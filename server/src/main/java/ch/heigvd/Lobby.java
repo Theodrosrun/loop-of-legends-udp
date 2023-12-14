@@ -3,6 +3,7 @@ package ch.heigvd;
 import ch.heigvd.snake.Snake;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import static ch.heigvd.Direction.*;
 /**
@@ -83,6 +84,15 @@ public class Lobby {
      */
     public ArrayList<Player> getPlayers() {
         return players;
+    }
+
+    public Player getPlayerByUUID(UUID uuid){
+        for (Player player : players) {
+            if (player.identifyPlayer(uuid)) {
+                return player;
+            }
+        }
+        return null;
     }
 
     /**
