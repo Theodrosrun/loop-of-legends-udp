@@ -3,6 +3,7 @@ package ch.heigvd;
 import com.googlecode.lanterna.input.KeyStroke;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import static java.lang.System.*;
@@ -11,7 +12,10 @@ public class Client {
     // Game
     private final Terminal terminal = new Terminal();
     private final InputHandler inputHandler = new InputHandler(terminal, 50);
+    private final UUID uuid = UUID.randomUUID();
+    private UUID serverUUID = null;
 
+    private String board = "";
     // Unicast
     private DatagramSocket unicastSocket;
     private InetAddress unicastServerAddress;
@@ -67,29 +71,38 @@ public class Client {
                     receiveData,
                     receiveData.length);
             unicastSocket.receive(packet);
-            return Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8));
+            String reponse =  Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8));
+            if (serverUUID == null || Message.getUUID(reponse).equals(serverUUID)) return reponse;
+            return null;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    private String receiveMulticast() {
+    private void receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
+            String multiCastResponse;
+            board = "recieveMulticast() demarré";
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(
                         receiveData,
                         receiveData.length
                 );
+                board = "Après DatagramPacket";
                 multicastSocket.receive(packet);
-                return Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+                board = "Après multicastSocket.receive(packet)";
+                multiCastResponse = Message.getResponse(new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8));
+                board = "Après Message.getResponse";
+               if (Message.getUUID(multiCastResponse).equals(serverUUID)) {
+                    board = Message.getData(multiCastResponse);
+                }
             }
         } catch (Exception  e) {
+            board = "Exception dans recieveMulticast()";
             e.printStackTrace();
-            return null;
-
         }
     }
 
@@ -102,14 +115,17 @@ public class Client {
     }
 
     private void initConnection() {
-        sendUnicast(Message.setCommand(Message.INIT));
+        sendUnicast(Message.setCommand(uuid, Message.INIT));
         while (!message.equals("DONE")) {
-            message = Message.getMessage(receiveUnicast());
+            response = receiveUnicast();
+            if (response == null) continue;
+            serverUUID = Message.getUUID(response);
+            message = Message.getMessage(response);
         }
     }
 
     private void tryLobby() {
-        sendUnicast(Message.setCommand(Message.LOBB));
+        sendUnicast(Message.setCommand(uuid, Message.LOBB));
         response = receiveUnicast();
         message = Message.getMessage(response);
         data = Message.getData(response);
@@ -136,7 +152,7 @@ public class Client {
         while (true) {
             String username = terminal.userInput();
 
-            sendUnicast(Message.setCommand(Message.JOIN, username));
+            sendUnicast(Message.setCommand(uuid, Message.JOIN, username));
 
             response = receiveUnicast();
             message = Message.getMessage(response);
@@ -172,7 +188,7 @@ public class Client {
 
         while (!isReady) {
             if (inputHandler.getKey() == Key.READY) {
-                sendUnicast(Message.setCommand(Message.RADY));
+                sendUnicast(Message.setCommand(uuid ,Message.RADY));
                 inputHandler.resetKey();
                 isReady = true;
             }
@@ -185,12 +201,13 @@ public class Client {
                 quit();
             }
 
-            response = receiveMulticast();
-            message = Message.getMessage(response);
-            data = Message.getData(response);
-            messageHandling(message, data);
             terminal.clear();
-            terminal.print(data);
+            terminal.print(board);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -198,21 +215,18 @@ public class Client {
         while (inputHandler.getKey() != Key.QUIT) {
             KeyStroke key = inputHandler.getKeyStroke();
             if (InputHandler.isDirection(key)) {
-                sendUnicast(Message.setCommand(Message.DIRE, Key.parseKeyStroke(key).toString()));
+                sendUnicast(Message.setCommand(uuid, Message.DIRE, Key.parseKeyStroke(key).toString()));
                 inputHandler.resetKey();
             }
-            response = receiveMulticast();
-            message = Message.getMessage(response);
-            data = Message.getData(response);
-            messageHandling(message, data);
+
             terminal.clear();
-            terminal.print(data);
+            terminal.print(board);
         }
         quit();
     }
 
     private void quit() {
-        sendUnicast(Message.setCommand(Message.QUIT));
+        sendUnicast(Message.setCommand(uuid, Message.QUIT));
 
         response = receiveUnicast();
         message = Message.getMessage(response);
@@ -277,6 +291,7 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
+
         client.startReceiveMulticast();
         client.initConnection();
         client.tryLobby();

@@ -12,10 +12,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     // Game configuration
-    private static final int NB_PLAYERS = 1;
-    private Lobby lobby = new Lobby(NB_PLAYERS);
+    private static final int NB_PLAYERS = 4;
     private boolean listenNewClient = true;
     private Board board;
+
+    // UUID for unicast communication
+    private UUID uuid;
     private static final int GAME_FREQUENCY = 200;
 
     private final Lobby lobby = new Lobby(NB_PLAYERS);
@@ -37,6 +39,7 @@ public class Server {
     private ScheduledExecutorService multicastScheduledExecutorService;
 
     Server(int unicastPort, int multicastPort, String multicastHost) {
+        uuid = UUID.randomUUID();
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
@@ -70,7 +73,7 @@ public class Server {
                 StringBuilder sb = new StringBuilder(getBoard().toString());
                 sb.append("\n");
                 sb.append(getLobbyInfos());
-                String message = Message.setCommand(Message.UPTE, sb.toString());
+                String message = Message.setCommand(uuid, Message.UPTE, sb.toString());
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
@@ -186,5 +189,9 @@ public class Server {
         Server server = new Server(unicastPort, multicastPort, multicastHost);
         server.sendMulticast();
         server.start();
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 }
