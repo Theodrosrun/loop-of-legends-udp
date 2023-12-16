@@ -4,10 +4,19 @@ import static java.lang.System.exit;
 
 public class Viewer extends Client {
 
+    /**
+     * Constructor for the Viewer.
+     *
+     * @param multicastStreamHost Host address for multicast streaming.
+     * @param multicastStreamPort Port for multicast streaming.
+     */
     private Viewer(String multicastStreamHost, int multicastStreamPort) {
         super(null, 0, multicastStreamHost, multicastStreamPort);
     }
 
+    /**
+     * Watches the game, displaying the board and waiting for the quit command.
+     */
     private void watchGame(){
         while (inputHandler.getKey() != Key.QUIT) {
             printBoard();
@@ -29,6 +38,9 @@ public class Viewer extends Client {
         quit();
     }
 
+    /**
+     * Overrides the quit method to clear the terminal and wait for the enter key to exit.
+     */
     @Override
     protected void quit() {
         terminal.clear();
