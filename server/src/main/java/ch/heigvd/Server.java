@@ -40,6 +40,15 @@ public class Server {
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
+    /**
+     * Server constructor. Initializes sockets and executor services for unicast and multicast communications.
+     *
+     * @param unicastPort          Port for unicast communication.
+     * @param multicastPort        Port for multicast communication.
+     * @param multicastHost        Host for multicast communication.
+     * @param multicastStreamPort  Port for multicast stream.
+     * @param multicastStreamHost  Host for multicast stream.
+     */
     Server(int unicastPort, int multicastPort, String multicastHost, int multicastStreamPort, String multicastStreamHost) {
         uuid = UUID.randomUUID();
         try {
@@ -67,14 +76,20 @@ public class Server {
         }
     }
 
+    /**
+     * Retrieves a player by their UUID.
+     *
+     * @param uuid UUID of the player.
+     * @return The player corresponding to the given UUID.
+     */
     Player getPlayerByUUID(UUID uuid){
         return lobby.getPlayerByUUID(uuid);
     }
 
-    private void stopAcceptClient() {
-        unicastExecutorService.shutdown();
-    }
-
+    /**
+     * Sends multicast messages at regular intervals.
+     * Includes game and lobby information in the message.
+     */
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
@@ -105,40 +120,82 @@ public class Server {
         }, INIT_DELAY, PERIOD, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Stops sending multicast messages by shutting down the scheduled executor service.
+     */
     private void stopSendMulticast() {
         multicastScheduledExecutorService.shutdown();
     }
 
+    /**
+     * Gets the UUID of the server.
+     *
+     * @return UUID of the server.
+     */
     public UUID getUuid() {
         return uuid;
     }
 
+    /**
+     * Join the lobby
+     *
+     * @param player The player that wants to join the lobby
+     */
     public void joinLobby(Player player) {
         lobby.join(player);
         board.deployLobby(lobby);
     }
 
+    /**
+     * Ask if lobby is full
+     *
+     * @return true if lobby is full
+     */
     public boolean isLobbyFull() {
         return lobby.lobbyIsFull();
     }
 
+    /**
+     * Get the infos of the lobby
+     *
+     * @return The infos of the lobby
+     */
     public String getLobbyInfos() {
         return lobby.getInfos();
     }
 
+    /**
+     * remove player from lobby
+     */
     public void removePlayerFromLobby(Player player) {
         lobby.removePlayer(player);
     }
 
+    /**
+     * Set the player ready
+     *
+     * @param player The player that is ready
+     */
     public void setPlayerReady(Player player) {
         lobby.setReady(player);
         board.deployLobby(lobby);
     }
 
+    /**
+     * Ask if the username is already in use
+     *
+     * @return true if the username is already in use
+     */
     public boolean playerNameAlreadyInUse(String userName) {
         return lobby.playerNameAlreadyInUse(userName);
     }
 
+    /**
+     * Set the direction of the player
+     *
+     * @param key    The key pressed by the player
+     * @param player The player that pressed the key
+     */
     public void setDirection(Key key, Player player) {
         if (!lobby.everyPlayerReady()) return;
         Direction direction = Direction.parseKey(key);
@@ -147,10 +204,9 @@ public class Server {
         }
     }
 
-    public Board getBoard() {
-        return board;
-    }
-
+    /**
+     * Start the server
+     */
     private void start() {
         while (true) {
 
