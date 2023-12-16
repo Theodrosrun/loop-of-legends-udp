@@ -295,7 +295,6 @@ public class Client {
         int multicastPort = 20000;
 
         Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-
         client.startReceiveMulticast();
         client.initConnection();
         client.tryLobby();

@@ -10,15 +10,13 @@ import java.util.concurrent.Executors;
 import java.util.UUID;
 
 public class ServerReceiver implements Runnable {
-    // Game configuration
-
+    private Server server;
 
     // Unicast
     private DatagramSocket unicastSocket;
     private InetAddress unicastClientAddress;
     private int unicastClientPort;
     private ExecutorService executor;
-    private Server server;
 
     ServerReceiver(Server server, DatagramSocket unicastSocket, int nbThreads) {
         this.server = server;

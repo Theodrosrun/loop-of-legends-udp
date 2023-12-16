@@ -4,34 +4,29 @@ import static java.lang.System.exit;
 
 public class Viewer extends Client {
 
-    private Viewer(String multicastHost, int multicastPort) {
-        super(null, 0, multicastHost, multicastPort);
+    private Viewer(String multicastStreamHost, int multicastStreamPort) {
+        super(null, 0, multicastStreamHost, multicastStreamPort);
     }
 
-    public static void main(String[] args) {
-
-        // Mutlicast
-        String multicastHost = "239.1.1.2";
-        int multicastPort = 20000;
-
-        Viewer viewer = new Viewer(multicastHost, multicastPort);
-        viewer.startReceiveMulticast();
-        while (viewer.inputHandler.getKey() != Key.QUIT) {
-            viewer.printBoard();
+    private void watchGame(){
+        while (inputHandler.getKey() != Key.QUIT) {
+            printBoard();
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-        while (viewer.inputHandler.getKey() != Key.ENTER) {
+
+        while (inputHandler.getKey() != Key.ENTER) {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-        viewer.quit();
+
+        quit();
     }
 
     @Override
@@ -47,5 +42,15 @@ public class Viewer extends Client {
             }
         }
         exit(0);
+    }
+
+    public static void main(String[] args) {
+        // Mutlicast stream
+        String multicastStreamHost = "239.1.1.2";
+        int multicastSteamPort = 20001;
+
+        Viewer viewer = new Viewer(multicastStreamHost, multicastSteamPort);
+        viewer.startReceiveMulticast();
+        viewer.watchGame();
     }
 }

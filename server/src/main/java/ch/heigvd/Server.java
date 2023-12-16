@@ -13,14 +13,9 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     // Game configuration
     private static final int NB_PLAYERS = 4;
-
-    private boolean listenNewClient = true;
-    private Board board;
-
-    // UUID for unicast communication
     private UUID uuid;
+    private Board board;
     private static final int GAME_FREQUENCY = 200;
-
     private final Lobby lobby = new Lobby(NB_PLAYERS);
 
     // Unicast
@@ -30,19 +25,22 @@ public class Server {
     private ExecutorService unicastExecutorService;
 
     // Mulitcast
-    private static final int MAX_PACKET_SIZE = 1024;
     private static final long INIT_DELAY = 100;
     private static final int PERIOD = GAME_FREQUENCY / 2;
     private final MulticastSocket multicastSocket;
-    private final MulticastSocket multicastSocketViewer;
     private final InetAddress multicastAddress;
-    private final InetAddress multicastAddressViewer;
     private final InetSocketAddress multicastGroup;
-    private final InetSocketAddress multicastGroupViewer;
+
+    // Mutlicast stream
+    private final MulticastSocket multicastStreamSocket;
+    private final InetAddress multicastStreamAddress;
+    private final InetSocketAddress multicastStreamGroup;
+
+    // Mulitcast config
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
-    Server(int unicastPort, int multicastPort, String multicastHost, int multicastPortViewer, String multicastHostViewer) {
+    Server(int unicastPort, int multicastPort, String multicastHost, int multicastStreamPort, String multicastStreamHost) {
         uuid = UUID.randomUUID();
         try {
             // Unicast
@@ -59,14 +57,11 @@ public class Server {
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
             this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
 
-            // MulticastViewer
-            this.multicastSocketViewer = new MulticastSocket(multicastPortViewer);
-            this.multicastAddressViewer = InetAddress.getByName(multicastHostViewer);
-            this.multicastGroupViewer = new InetSocketAddress(multicastAddressViewer, multicastPort);
-            this.multicastSocketViewer.joinGroup(multicastGroupViewer, multicastNetworkInterface);
-
-
-
+            // Multicast stream
+            this.multicastStreamSocket = new MulticastSocket(multicastStreamPort);
+            this.multicastStreamAddress = InetAddress.getByName(multicastStreamHost);
+            this.multicastStreamGroup = new InetSocketAddress(multicastStreamAddress, multicastStreamPort);
+            this.multicastStreamSocket.joinGroup(multicastStreamGroup, multicastNetworkInterface);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -80,7 +75,6 @@ public class Server {
         unicastExecutorService.shutdown();
     }
 
-    // Passive discovery protocol pattern
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
@@ -97,15 +91,14 @@ public class Server {
                         multicastGroup
                 );
 
-                DatagramPacket datagramViewer = new DatagramPacket(
+                DatagramPacket datagramStream = new DatagramPacket(
                         payload,
                         payload.length,
-                        multicastGroupViewer
+                        multicastStreamGroup
                 );
 
-
                 multicastSocket.send(datagram);
-                multicastSocketViewer.send(datagramViewer);
+                multicastStreamSocket.send(datagramStream);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -114,6 +107,10 @@ public class Server {
 
     private void stopSendMulticast() {
         multicastScheduledExecutorService.shutdown();
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 
     public void joinLobby(Player player) {
@@ -206,16 +203,14 @@ public class Server {
 
         // Multicast
         String multicastHost = "239.1.1.1";
-        String multicastHostViewer = "239.1.1.2";
         int multicastPort = 20000;
-        int multicastPortViewer = 20001;
 
-        Server server = new Server(unicastPort, multicastPort, multicastHost, multicastPortViewer, multicastHostViewer);
+        // Multicast stream
+        String multicastStreamHost = "239.1.1.2";
+        int multicastStreamPort = 20001;
+
+        Server server = new Server(unicastPort, multicastPort, multicastHost, multicastStreamPort, multicastStreamHost);
         server.sendMulticast();
         server.start();
-    }
-
-    public UUID getUuid() {
-        return uuid;
     }
 }
