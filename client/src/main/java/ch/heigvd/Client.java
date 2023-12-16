@@ -31,6 +31,14 @@ public class Client {
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
+    /**
+     * Constructor for the Client. Initializes sockets and executor services for both unicast and multicast communications.
+     *
+     * @param unicastServerAddress Address of the unicast server.
+     * @param unicastserverPort    Port of the unicast server.
+     * @param multicastHost        Host address for multicast communication.
+     * @param multicastPort        Port for multicast communication.
+     */
     Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
         try {
             // Unicast
@@ -52,6 +60,11 @@ public class Client {
         }
     }
 
+    /**
+     * Sends a unicast message to the server.
+     *
+     * @param message The message to be sent.
+     */
     private void sendUnicast(String message) {
         try {
             byte[] payload = message.getBytes(StandardCharsets.UTF_8);
@@ -66,6 +79,11 @@ public class Client {
         }
     }
 
+    /**
+     * Receives a unicast message from the server.
+     *
+     * @return The received message as a String, or null if the message is from a different server.
+     */
     private String receiveUnicast() {
         try {
             byte[] receiveData = new byte[1024];
@@ -82,6 +100,9 @@ public class Client {
         }
     }
 
+    /**
+     * Continuously receives multicast messages and updates the game board.
+     */
     private void receiveMulticast() {
         try {
             byte[] receiveData = new byte[1024];
@@ -100,14 +121,23 @@ public class Client {
         }
     }
 
+    /**
+     * Starts a thread to continuously receive multicast messages.
+     */
     protected void startReceiveMulticast() {
         multicastScheduledExecutorService.execute(this::receiveMulticast);
     }
 
+    /**
+     * Stops the thread that is receiving multicast messages.
+     */
     private void stopReceiveMulticast() {
         multicastScheduledExecutorService.shutdown();
     }
 
+    /**
+     * Initializes the connection by sending a unicast message and waiting for a response.
+     */
     private void initConnection() {
         sendUnicast(Message.setCommand(uuid, Message.INIT));
         while (!message.equals("DONE")) {
@@ -118,6 +148,9 @@ public class Client {
         }
     }
 
+    /**
+     * try if lobby is open or not full
+     */
     private void tryLobby() {
         sendUnicast(Message.setCommand(uuid, Message.LOBB));
         response = receiveUnicast();
@@ -126,6 +159,9 @@ public class Client {
         messageHandling(message, data);
     }
 
+    /**
+     * Join the lobby
+     */
     private void join() {
         terminal.clear();
         terminal.print(Intro.logo);
@@ -176,6 +212,9 @@ public class Client {
         inputHandler.restoreHandler();
     }
 
+    /**
+     * Wait for the game to start
+     */
     private void waitReady() {
         inputHandler.resetKey();
         boolean isReady = false;
@@ -205,6 +244,9 @@ public class Client {
         }
     }
 
+    /**
+     * Control the snake
+     */
     private void controlSnake() {
         while (inputHandler.getKey() != Key.QUIT) {
             KeyStroke key = inputHandler.getKeyStroke();
@@ -224,11 +266,17 @@ public class Client {
         quit();
     }
 
+    /**
+     * Print board
+     */
     public void printBoard() {
         terminal.clear();
         terminal.print(board);
     }
 
+    /**
+     * Quit the game
+     */
     protected void quit() {
         stopReceiveMulticast();
         sendUnicast(Message.setCommand(uuid, Message.QUIT));
@@ -254,6 +302,12 @@ public class Client {
         exit(0);
     }
 
+    /**
+     * Handle the message
+     *
+     * @param message the message
+     * @param data    the data
+     */
     private void messageHandling(String message, String data) {
         switch (message) {
             case "EROR":
@@ -272,6 +326,10 @@ public class Client {
         }
     }
 
+    /**
+     * Request the user to press a key
+     * @param key the key to press
+     */
     private void requestKey(Key key){
         inputHandler.resetKey();
         while (inputHandler.getKey() != key) {
