@@ -156,6 +156,7 @@ public class Server {
 
             board = new Board(30, 15, 15, 200);
 
+            // Loop for lobby
             lobby.open();
             while (!lobby.everyPlayerReady()) {
                 board.deployLobby(lobby);
