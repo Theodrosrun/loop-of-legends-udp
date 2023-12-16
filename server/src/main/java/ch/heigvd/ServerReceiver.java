@@ -18,6 +18,13 @@ public class ServerReceiver implements Runnable {
     private int unicastClientPort;
     private ExecutorService executor;
 
+    /**
+     * Constructor for ServerReceiver. Initializes the unicast socket and sets up the thread pool for handling messages.
+     *
+     * @param server         The server instance.
+     * @param unicastSocket  The unicast DatagramSocket for communication.
+     * @param nbThreads      Number of threads in the thread pool.
+     */
     ServerReceiver(Server server, DatagramSocket unicastSocket, int nbThreads) {
         this.server = server;
         this.unicastSocket = unicastSocket;
@@ -26,6 +33,9 @@ public class ServerReceiver implements Runnable {
         this.executor = Executors.newFixedThreadPool(nbThreads);
     }
 
+    /**
+     * The main run method for the thread. Continuously receives and handles unicast messages.
+     */
     @Override
     public void run() {
         while (true) {
@@ -36,6 +46,11 @@ public class ServerReceiver implements Runnable {
         }
     }
 
+    /**
+     * Sends a unicast message to the client.
+     *
+     * @param message The message to be sent.
+     */
     private void sendUnicast(String message) {
         try {
             byte[] payload = message.getBytes(StandardCharsets.UTF_8);
@@ -50,6 +65,11 @@ public class ServerReceiver implements Runnable {
         }
     }
 
+    /**
+     * Receives a unicast message from the client.
+     *
+     * @return The received message as a String.
+     */
     private String receiveUnicast() {
         try {
             byte[] receiveData = new byte[1024];
@@ -69,6 +89,11 @@ public class ServerReceiver implements Runnable {
         }
     }
 
+    /**
+     * Handles a received unicast message based on its content.
+     *
+     * @param msg The received message.
+     */
     private void handleUnicastMessage(String msg) {
         String message = Message.getMessage(msg);
         String data = Message.getData(msg);
