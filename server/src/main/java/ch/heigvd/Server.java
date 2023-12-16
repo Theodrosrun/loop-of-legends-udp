@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     // Game configuration
     private static final int NB_PLAYERS = 4;
+
     private boolean listenNewClient = true;
     private Board board;
 
@@ -32,13 +33,16 @@ public class Server {
     private static final int MAX_PACKET_SIZE = 1024;
     private static final long INIT_DELAY = 100;
     private static final int PERIOD = GAME_FREQUENCY / 2;
-    private MulticastSocket multicastSocket;
-    private InetAddress multicastAddress;
-    private InetSocketAddress multicastGroup;
+    private final MulticastSocket multicastSocket;
+    private final MulticastSocket multicastSocketViewer;
+    private final InetAddress multicastAddress;
+    private final InetAddress multicastAddressViewer;
+    private final InetSocketAddress multicastGroup;
+    private final InetSocketAddress multicastGroupViewer;
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
-    Server(int unicastPort, int multicastPort, String multicastHost) {
+    Server(int unicastPort, int multicastPort, String multicastHost, int multicastPortViewer, String multicastHostViewer) {
         uuid = UUID.randomUUID();
         try {
             // Unicast
@@ -54,6 +58,15 @@ public class Server {
             this.multicastNetworkInterface = selector.selectNetworkInterface();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
             this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
+
+            // MulticastViewer
+            this.multicastSocketViewer = new MulticastSocket(multicastPortViewer);
+            this.multicastAddressViewer = InetAddress.getByName(multicastHostViewer);
+            this.multicastGroupViewer = new InetSocketAddress(multicastAddressViewer, multicastPort);
+            this.multicastSocketViewer.joinGroup(multicastGroupViewer, multicastNetworkInterface);
+
+
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +84,7 @@ public class Server {
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
-                StringBuilder sb = new StringBuilder(getBoard().toString());
+                StringBuilder sb = new StringBuilder(board.toString());
                 sb.append("\n");
                 sb.append(getLobbyInfos());
                 String message = Message.setCommand(uuid, Message.UPTE, sb.toString());
@@ -84,7 +97,15 @@ public class Server {
                         multicastGroup
                 );
 
+                DatagramPacket datagramViewer = new DatagramPacket(
+                        payload,
+                        payload.length,
+                        multicastGroupViewer
+                );
+
+
                 multicastSocket.send(datagram);
+                multicastSocketViewer.send(datagramViewer);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -135,20 +156,20 @@ public class Server {
 
     private void start() {
         while (true) {
-//            listenNewClient = true;
-//            Thread thListener = new Thread(this::listenNewClient);
-//            thListener.start();
-              board = new Board(30, 15, 15, 200);
-//
-//            // Loop for lobby
+
+            board = new Board(30, 15, 15, 200);
+
             lobby.open();
             while (!lobby.everyPlayerReady()) {
                 board.deployLobby(lobby);
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
             lobby.initSnakes(board);
             lobby.close();
-//            listenNewClient = false;
-//            thListener.interrupt();
 
             // Loop for game
             ArrayList<Position> generatedFood = new ArrayList<>();
@@ -185,9 +206,11 @@ public class Server {
 
         // Multicast
         String multicastHost = "239.1.1.1";
+        String multicastHostViewer = "239.1.1.2";
         int multicastPort = 20000;
+        int multicastPortViewer = 20001;
 
-        Server server = new Server(unicastPort, multicastPort, multicastHost);
+        Server server = new Server(unicastPort, multicastPort, multicastHost, multicastPortViewer, multicastHostViewer);
         server.sendMulticast();
         server.start();
     }

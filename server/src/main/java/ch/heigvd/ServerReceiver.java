@@ -106,11 +106,16 @@ public class ServerReceiver implements Runnable {
                 break;
 
             case RADY:
-                sendUnicast(Message.setCommand(server.getUuid(), Message.EROR, "You are not in the lobby"));
+                if (p == null) {
+                    sendUnicast(Message.setCommand(server.getUuid(), Message.EROR, "You are not in the lobby"));
+                }
                 server.setPlayerReady(p);
                 break;
 
             case DIRE:
+                if (p == null) {
+                    sendUnicast(Message.setCommand(server.getUuid(), Message.EROR, "You are not in the game"));
+                }
                 Key key = Key.valueOf(data);
                 server.setDirection(key, p);
                 break;

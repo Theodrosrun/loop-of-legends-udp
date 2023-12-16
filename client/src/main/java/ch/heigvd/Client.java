@@ -10,11 +10,12 @@ import static java.lang.System.*;
 
 public class Client {
     // Game
-    private final Terminal terminal = new Terminal();
-    private final InputHandler inputHandler = new InputHandler(terminal, 50);
+    protected final Terminal terminal = new Terminal();
+    protected final InputHandler inputHandler = new InputHandler(terminal, 50);
     private final UUID uuid = UUID.randomUUID();
-    private UUID serverUUID = null;
 
+    private final int DISPLAY_FREQUENCY = 25;
+    private UUID serverUUID = null;
     private String board = "";
     // Unicast
     private DatagramSocket unicastSocket;
@@ -92,14 +93,14 @@ public class Client {
                 );
                 multicastSocket.receive(packet);
                 board = Message.getData(Message.getResponse(new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8)));
+                Thread.sleep(DISPLAY_FREQUENCY);
             }
         } catch (Exception  e) {
-            board = "Exception dans recieveMulticast()";
             e.printStackTrace();
         }
     }
 
-    private void startReceiveMulticast() {
+    protected void startReceiveMulticast() {
         multicastScheduledExecutorService.execute(this::receiveMulticast);
     }
 
@@ -134,7 +135,7 @@ public class Client {
                 quit();
             }
             try {
-                Thread.sleep(200);
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -162,7 +163,7 @@ public class Client {
             while (inputHandler.getKey() != Key.ENTER) {
                 terminal.print(data + "\n" + "Press enter to continue\n");
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(DISPLAY_FREQUENCY);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -194,8 +195,13 @@ public class Client {
                 quit();
             }
 
-            terminal.clear();
-            terminal.print(board);
+            try {
+                Thread.sleep(DISPLAY_FREQUENCY);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            printBoard();
         }
     }
 
@@ -207,15 +213,25 @@ public class Client {
                 inputHandler.resetKey();
             }
 
-            terminal.clear();
-            terminal.print(board);
+            try {
+                Thread.sleep(DISPLAY_FREQUENCY);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            printBoard();
         }
         quit();
     }
 
-    private void quit() {
-        sendUnicast(Message.setCommand(uuid, Message.QUIT));
+    public void printBoard() {
+        terminal.clear();
+        terminal.print(board);
+    }
 
+    protected void quit() {
+        stopReceiveMulticast();
+        sendUnicast(Message.setCommand(uuid, Message.QUIT));
         response = receiveUnicast();
         message = Message.getMessage(response);
         data = Message.getData(response);
