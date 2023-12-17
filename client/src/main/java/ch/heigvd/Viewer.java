@@ -1,13 +1,13 @@
 package ch.heigvd;
 
 import static java.lang.System.exit;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 @Command(name = "Viewer", mixinStandardHelpOptions = true, version = "Viewer 1.0",
         description = "Starts a viewer for the game.")
