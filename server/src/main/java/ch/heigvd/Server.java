@@ -3,6 +3,7 @@ package ch.heigvd;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,11 +12,11 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     // Game configuration
-    private static final int NB_PLAYERS = 1;
-    private Lobby lobby = new Lobby(NB_PLAYERS);
-    private boolean listenNewClient = true;
+    private static final int NB_PLAYERS = 4;
+    private UUID uuid;
     private Board board;
     private static final int GAME_FREQUENCY = 200;
+    private final Lobby lobby = new Lobby(NB_PLAYERS);
 
     // Unicast
     private static final int UNICAST_NB_EXECUTORS = 1;
@@ -24,16 +25,32 @@ public class Server {
     private ExecutorService unicastExecutorService;
 
     // Mulitcast
-    private static final int MAX_PACKET_SIZE = 1024;
     private static final long INIT_DELAY = 100;
     private static final int PERIOD = GAME_FREQUENCY / 2;
-    private MulticastSocket multicastSocket;
-    private InetAddress multicastAddress;
-    private InetSocketAddress multicastGroup;
+    private final MulticastSocket multicastSocket;
+    private final InetAddress multicastAddress;
+    private final InetSocketAddress multicastGroup;
+
+    // Mutlicast stream
+    private final MulticastSocket multicastStreamSocket;
+    private final InetAddress multicastStreamAddress;
+    private final InetSocketAddress multicastStreamGroup;
+
+    // Mulitcast config
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
 
-    Server(int unicastPort, int multicastPort, String multicastHost) {
+    /**
+     * Server constructor. Initializes sockets and executor services for unicast and multicast communications.
+     *
+     * @param unicastPort          Port for unicast communication.
+     * @param multicastPort        Port for multicast communication.
+     * @param multicastHost        Host for multicast communication.
+     * @param multicastStreamPort  Port for multicast stream.
+     * @param multicastStreamHost  Host for multicast stream.
+     */
+    Server(int unicastPort, int multicastPort, String multicastHost, int multicastStreamPort, String multicastStreamHost) {
+        uuid = UUID.randomUUID();
         try {
             // Unicast
             this.unicastSocket = new DatagramSocket(unicastPort);
@@ -44,21 +61,42 @@ public class Server {
             this.multicastSocket = new MulticastSocket(multicastPort);
             this.multicastAddress = InetAddress.getByName(multicastHost);
             this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
-            this.multicastNetworkInterface = NetworkInterfaceHelper.getFirstNetworkInterfaceAvailable();
+            NetworkInterfaceSelector selector = new NetworkInterfaceSelector();
+            this.multicastNetworkInterface = selector.selectNetworkInterface();
             this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
             this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
+
+            // Multicast stream
+            this.multicastStreamSocket = new MulticastSocket(multicastStreamPort);
+            this.multicastStreamAddress = InetAddress.getByName(multicastStreamHost);
+            this.multicastStreamGroup = new InetSocketAddress(multicastStreamAddress, multicastStreamPort);
+            this.multicastStreamSocket.joinGroup(multicastStreamGroup, multicastNetworkInterface);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Retrieves a player by their UUID.
+     *
+     * @param uuid UUID of the player.
+     * @return The player corresponding to the given UUID.
+     */
+    Player getPlayerByUUID(UUID uuid){
+        return lobby.getPlayerByUUID(uuid);
+    }
+
+    /**
+     * Sends multicast messages at regular intervals.
+     * Includes game and lobby information in the message.
+     */
     private void sendMulticast() {
         multicastScheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
-                StringBuilder sb = new StringBuilder(getBoard().toString());
+                StringBuilder sb = new StringBuilder(board.toString());
                 sb.append("\n");
                 sb.append(getLobbyInfos());
-                String message = Message.setCommand(Message.UPTE, sb.toString());
+                String message = Message.setCommand(uuid, Message.UPTE, sb.toString());
 
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
@@ -68,43 +106,96 @@ public class Server {
                         multicastGroup
                 );
 
+                DatagramPacket datagramStream = new DatagramPacket(
+                        payload,
+                        payload.length,
+                        multicastStreamGroup
+                );
+
                 multicastSocket.send(datagram);
+                multicastStreamSocket.send(datagramStream);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }, INIT_DELAY, PERIOD, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Stops sending multicast messages by shutting down the scheduled executor service.
+     */
     private void stopSendMulticast() {
         multicastScheduledExecutorService.shutdown();
     }
 
+    /**
+     * Gets the UUID of the server.
+     *
+     * @return UUID of the server.
+     */
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    /**
+     * Join the lobby
+     *
+     * @param player The player that wants to join the lobby
+     */
     public void joinLobby(Player player) {
         lobby.join(player);
         board.deployLobby(lobby);
     }
 
+    /**
+     * Ask if lobby is full
+     *
+     * @return true if lobby is full
+     */
     public boolean isLobbyFull() {
         return lobby.lobbyIsFull();
     }
 
+    /**
+     * Get the infos of the lobby
+     *
+     * @return The infos of the lobby
+     */
     public String getLobbyInfos() {
         return lobby.getInfos();
     }
 
+    /**
+     * remove player from lobby
+     */
     public void removePlayerFromLobby(Player player) {
         lobby.removePlayer(player);
     }
 
+    /**
+     * Set the player ready
+     *
+     * @param player The player that is ready
+     */
     public void setPlayerReady(Player player) {
         lobby.setReady(player);
         board.deployLobby(lobby);
     }
 
+    /**
+     * Ask if the username is already in use
+     *
+     * @return true if the username is already in use
+     */
     public boolean playerNameAlreadyInUse(String userName) {
         return lobby.playerNameAlreadyInUse(userName);
     }
 
+    /**
+     * Set the direction of the player
+     *
+     * @param key    The key pressed by the player
+     * @param player The player that pressed the key
+     */
     public void setDirection(Key key, Player player) {
         if (!lobby.everyPlayerReady()) return;
         Direction direction = Direction.parseKey(key);
@@ -113,26 +204,26 @@ public class Server {
         }
     }
 
-    public Board getBoard() {
-        return board;
-    }
-
+    /**
+     * Start the server
+     */
     private void start() {
         while (true) {
-//            listenNewClient = true;
-//            Thread thListener = new Thread(this::listenNewClient);
-//            thListener.start();
-              board = new Board(30, 15, 15, 200);
-//
-//            // Loop for lobby
+
+            board = new Board(30, 15, 15, 200);
+
+            // Loop for lobby
             lobby.open();
             while (!lobby.everyPlayerReady()) {
                 board.deployLobby(lobby);
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
             lobby.initSnakes(board);
             lobby.close();
-//            listenNewClient = false;
-//            thListener.interrupt();
 
             // Loop for game
             ArrayList<Position> generatedFood = new ArrayList<>();
@@ -171,7 +262,11 @@ public class Server {
         String multicastHost = "239.1.1.1";
         int multicastPort = 20000;
 
-        Server server = new Server(unicastPort, multicastPort, multicastHost);
+        // Multicast stream
+        String multicastStreamHost = "239.1.1.2";
+        int multicastStreamPort = 20001;
+
+        Server server = new Server(unicastPort, multicastPort, multicastHost, multicastStreamPort, multicastStreamHost);
         server.sendMulticast();
         server.start();
     }
