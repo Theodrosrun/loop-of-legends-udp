@@ -7,58 +7,41 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import static java.lang.System.*;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
-public class Client {
+@Command(name = "Client", mixinStandardHelpOptions = true, version = "Client 1.0",
+        description = "Starts a client for the game.")
+public class Client implements Runnable {
     // Game
-    protected final Terminal terminal = new Terminal();
-    protected final InputHandler inputHandler = new InputHandler(terminal, 50);
+    final Terminal terminal = new Terminal();
+    final InputHandler inputHandler = new InputHandler(terminal, 50);
     private final UUID uuid = UUID.randomUUID();
-
     private final int DISPLAY_FREQUENCY = 25;
     private UUID serverUUID = null;
     private String board = "";
+
     // Unicast
     private DatagramSocket unicastSocket;
+    @Option(names = {"-uh", "--unicast-host"}, description = "Unicast host address.")
+    private String unicastServerAddressString = "127.0.0.1";
     private InetAddress unicastServerAddress;
-    private int unicastServerPort;
+    @Option(names = {"-up", "--unicast-port"}, description = "Unicast port number.")
+    private int unicastServerPort = 10000;
     private ScheduledExecutorService unicastScheduledExecutorService;
     private String command = "", response = "", message = "", data = "";
 
     // Multicast
     private MulticastSocket multicastSocket;
+    @Option(names = {"-mh", "--multicast-host"}, description = "Multicast host address.")
+    private String multicastHost = "239.1.1.1";
+    @Option(names = {"-mp", "--multicast-port"}, description = "Multicast port number.")
+    private int multicastPort = 20000;
     private InetAddress multicastAddress;
     private InetSocketAddress multicastGroup;
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
-
-    /**
-     * Constructor for the Client. Initializes sockets and executor services for both unicast and multicast communications.
-     *
-     * @param unicastServerAddress Address of the unicast server.
-     * @param unicastserverPort    Port of the unicast server.
-     * @param multicastHost        Host address for multicast communication.
-     * @param multicastPort        Port for multicast communication.
-     */
-    Client(String unicastServerAddress, int unicastserverPort, String multicastHost, int multicastPort) {
-        try {
-            // Unicast
-            this.unicastSocket = new DatagramSocket();
-            this.unicastServerAddress = InetAddress.getByName(unicastServerAddress);
-            this.unicastServerPort = unicastserverPort;
-            this.unicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
-
-            // Multicast
-            this.multicastSocket = new MulticastSocket(multicastPort);
-            this.multicastAddress = InetAddress.getByName(multicastHost);
-            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
-            NetworkInterfaceSelector selector = new NetworkInterfaceSelector();
-            this.multicastNetworkInterface = selector.selectNetworkInterface();
-            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Sends a unicast message to the server.
@@ -124,7 +107,7 @@ public class Client {
     /**
      * Starts a thread to continuously receive multicast messages.
      */
-    protected void startReceiveMulticast() {
+    void startReceiveMulticast() {
         multicastScheduledExecutorService.execute(this::receiveMulticast);
     }
 
@@ -277,7 +260,7 @@ public class Client {
     /**
      * Quit the game
      */
-    protected void quit() {
+    void quit() {
         stopReceiveMulticast();
         sendUnicast(Message.setCommand(uuid, Message.QUIT));
         response = receiveUnicast();
@@ -343,21 +326,36 @@ public class Client {
         inputHandler.resetKey();
     }
 
+    @Override
+    public void run(){
+        try {
+            // Unicast
+            this.unicastSocket = new DatagramSocket();
+            this.unicastServerAddress = InetAddress.getByName(unicastServerAddressString);
+            this.unicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
+
+            // Multicast
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = InetAddress.getByName(multicastHost);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
+            NetworkInterfaceSelector selector = new NetworkInterfaceSelector();
+            this.multicastNetworkInterface = selector.selectNetworkInterface();
+            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(1);
+
+            startReceiveMulticast();
+            initConnection();
+            tryLobby();
+            join();
+            waitReady();
+            controlSnake();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
-        // Unicast
-        String unicastServerAddress = "127.0.0.1";
-        int unicastServerPort = 10000;
-
-        // Mutlicast
-        String multicastHost = "239.1.1.1";
-        int multicastPort = 20000;
-
-        Client client = new Client(unicastServerAddress, unicastServerPort, multicastHost, multicastPort);
-        client.startReceiveMulticast();
-        client.initConnection();
-        client.tryLobby();
-        client.join();
-        client.waitReady();
-        client.controlSnake();
+        int exitCode = new CommandLine(new Client()).execute(args);
+        System.exit(exitCode);
     }
 }
