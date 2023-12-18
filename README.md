@@ -51,7 +51,21 @@ Ensure you have the Java Runtime Environment 17 (JRE) or Java Development Kit 17
   ```
 
 ### Step 3: Dependencies
-- TODO
+
+1. **Logback Classic**
+    - Group ID: `ch.qos.logback`
+    - Artifact ID: `logback-classic`
+    - Version: `1.4.11`
+
+2. **Picocli**
+    - Group ID: `info.picocli`
+    - Artifact ID: `picocli`
+    - Version: `4.7.5`
+
+3. **Lanterna**
+    - Group ID: `com.googlecode.lanterna`
+    - Artifact ID: `lanterna`
+    - Version: `3.1.1`
 ---
 
 ## 2. Running the Application
