@@ -1,22 +1,22 @@
 services:
   LoopOfLegendServer:
-    image: saloon_server:v1.0.0
+    image: loop_of_legends_server:v1.0.0
     command:
       - --Adapter=eth0
-  client1:
-    image: saloon_client:v1.0.0
+  client:
+    image: loop_of_legends_client:v1.0.0
     command:
       - --Adapter=eth0
-      - --DefaultHost=SaloonServer
+      - --DefaultHost=LoopOfLegendServer
     depends_on:
       - LoopOfLegendServer
     stdin_open: true
     tty: true
-  client2:
-    image: saloon_client:v1.0.0
+  viewer:
+    image: loop_of_legends_viewer:v1.0.0
     command:
       - --Adapter=eth0
-      - --DefaultHost=SaloonServer
+      - --DefaultHost=LoopOfLegendServer
     depends_on:
       - LoopOfLegendServer
     stdin_open: true
