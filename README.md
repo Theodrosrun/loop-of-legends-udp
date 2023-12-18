@@ -66,9 +66,30 @@ Ensure you have the Java Runtime Environment 17 (JRE) or Java Development Kit 17
     - Group ID: `com.googlecode.lanterna`
     - Artifact ID: `lanterna`
     - Version: `3.1.1`
+
 ---
 
-## 2. Running the Application
+## 2.1 Running the Application with Docker
+
+### Explanation on Using Lanterna with Docker
+
+As part of our project, we have prepared Dockerfiles and a `docker-compose.yml` file to facilitate the deployment and management of our Docker containers. However, it's important to address a significant limitation related to the use of the Lanterna library in the Docker environment.
+
+#### The Challenge of Lanterna in Docker
+Lanterna is a Java library designed for creating text-based user interfaces in a terminal. While it's extremely useful for CLI (Command Line Interface) applications, its compatibility with Docker can be problematic. Lanterna requires a terminal (TTY) environment to function properly, which can present challenges in a Docker container, particularly when attempting to achieve graphical mode interaction or an interactive user interface.
+
+#### Docker Images Created for Indicative Purposes
+Due to this limitation, the Docker images we created for the server, client, and viewer of the project should be considered primarily for indicative purposes. Although the Dockerfiles and `docker-compose.yml` are technically correct and functional, they may not provide an optimal user experience with Lanterna due to the constraints of the Docker environment.
+
+#### Solutions and Alternatives
+For those interested in experimenting with the project in Docker, it is possible to attempt alternative configurations, such as setting up a pseudo-TTY or using Docker in interactive mode. However, these solutions may not fully resolve the issues of interaction with the Lanterna user interface.
+
+#### Conclusion
+We encourage users to consider this limitation when using our Docker images with Lanterna. For an optimal experience, it may be preferable to run the application directly on a host machine with an adequate terminal environment, outside of a Docker container.
+
+---
+
+## 2.2 Running the Application
 
 All commands below must be performed in the target folder.
 
