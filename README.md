@@ -180,9 +180,17 @@ The Loop of Legend (LOL) protocol is designed specifically for online multiplaye
 - To start a game, a client connects to the server and requests to join a game. The game begins when the lobby has sufficient players, and all players indicate they are ready.
 
 ## 3.2 Transport protocol
-### Protocol and port
-- **Protocol**: TCP (Transmission Control Protocol) for reliable, ordered, and error-checked delivery of game data.
-- **Port**: The default communication port for the LOL protocol is 20000.
+### Unicast Protocol and Port
+- **Protocol**: TCP (Transmission Control Protocol) is used for reliable, ordered, and error-checked delivery of game data.
+- **Port**: The default unicast communication port for the game server is `10000`.
+
+### Multicast Protocol and Port
+- **Protocol**: UDP (User Datagram Protocol) for multicast communication, providing efficient data distribution among multiple clients.
+- **Port**: The default multicast port used for game data broadcasting is `20000`, with the multicast address set to `239.1.1.1`.
+
+### Streaming Protocol and Port
+- **Protocol**: UDP is also used for streaming game updates.
+- **Port**: The game streaming data is sent over the multicast port `20001`, using the multicast stream host address `239.1.1.2`.
 
 ### Connection Initiation
 - The connection is initiated by the client.
