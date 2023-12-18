@@ -1,6 +1,6 @@
 services:
   LoopOfLegendServer:
-    image: loop_of_legends_server:v1.0.0
+    image: ghcr.io/theodrosrun/loop_of_legends_server:v1.0.0
     command:
       - --unicast-host=127.0.0.1
       - --unicast-port=10000
@@ -9,7 +9,7 @@ services:
       - --multicast-stream-host=239.1.1.2
       - --multicast-stream-port=20001
   client:
-    image: loop_of_legends_client:v1.0.0
+    image: ghcr.io/theodrosrun/loop_of_legends_client:v1.0.0
     command:
       - --unicast-host=127.0.0.1
       - --unicast-port=10000
@@ -20,7 +20,7 @@ services:
     stdin_open: true
     tty: true
   viewer:
-    image: loop_of_legends_viewer:v1.0.0
+    image: ghcr.io/theodrosrun/loop_of_legends_viewer:v1.0.0
     command:
       - --multicast-stream-host=239.1.1.2
       - --multicast-stream-port=20001
