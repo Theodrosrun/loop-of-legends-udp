@@ -99,26 +99,26 @@ For launching applications on Windows, use the `javaw` command.
 #### Launching server:
 By default, port is 20000.
 ```bash
-javaw -jar server-1.0-SNAPSHOT.jar [port]
+javaw -jar server-1.0-SNAPSHOT.jar [--unicast-port=port] [--multicast-host=host] [--multicast-port=port] [--multicast-stream-host=host] [--multicast-stream-port=port]
 ```
 Examples:
 ```bash
 javaw -jar server-1.0-SNAPSHOT.jar
 ```
 ```bash
-javaw -jar server-1.0-SNAPSHOT.jar 40000
+javaw -jar server-1.0-SNAPSHOT.jar --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000 --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
 ```
 #### Launching client:
 By default, IP is 127.0.0.1 and port is 20000.
 ```bash
-javaw -jar client-1.0-SNAPSHOT.jar [server-address] [port]
+javaw -jar client-1.0-SNAPSHOT.jar [--unicast-host=host] [--unicast-port=port] [--multicast-host=host] [--multicast-port=port]
 ```
 Examples:
 ```bash
 javaw -jar client-1.0-SNAPSHOT.jar
 ```
 ```bash
-javaw -jar client-1.0-SNAPSHOT.jar 192.168.1.10 40000
+javaw -jar client-1.0-SNAPSHOT.jar --unicast-host=192.168.1.10 --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000
 ```
 
 <br>
@@ -129,27 +129,27 @@ For launching applications on Linux, use the `java` command.
 #### Launching server:
 By default, port is 20000.
 ```bash
-java -jar server-1.0-SNAPSHOT.jar [port]
+java -jar server-1.0-SNAPSHOT.jar [--unicast-port=port] [--multicast-host=host] [--multicast-port=port] [--multicast-stream-host=host] [--multicast-stream-port=port]
 ```
 Examples:
 ```bash
 java -jar server-1.0-SNAPSHOT.jar
 ```
 ```bash
-java -jar server-1.0-SNAPSHOT.jar 40000
+java -jar server-1.0-SNAPSHOT.jar --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000 --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
 ```
 
 #### Launching client:
 By default, IP is 127.0.0.1 and port is 20000.
 ```bash
-java -jar client-1.0-SNAPSHOT.jar [server-address] [port]
+java -jar client-1.0-SNAPSHOT.jar [--unicast-host=host] [--unicast-port=port] [--multicast-host=host] [--multicast-port=port]
 ```
 Examples:
 ```bash
 java -jar client-1.0-SNAPSHOT.jar
 ```
 ```bash
-java -jar client-1.0-SNAPSHOT.jar 192.168.1.10 40000
+java -jar client-1.0-SNAPSHOT.jar --unicast-host=192.168.1.10 --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000
 ```
 
 <br>
