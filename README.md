@@ -93,11 +93,12 @@ We encourage users to consider this limitation when using our Docker images with
 
 All commands below must be performed in the target folder.
 
-### Windows
-For launching applications on Windows, use the `javaw` command.
+For launching applications on Windows, use the `javaw` command, while on Linux, use the same command but with `java` instead of `javaw`.
+
+<br>
 
 #### Launching server:
-By default, port is 20000.
+By default, the server listens on unicast port 10000 and multicast port 20000, with multicast host address set to 239.1.1.1. Additionally, it streams to a multicast stream host 239.1.1.2 on port 20001.
 ```bash
 javaw -jar server-1.0-SNAPSHOT.jar [--unicast-port=port] [--multicast-host=host] [--multicast-port=port] [--multicast-stream-host=host] [--multicast-stream-port=port]
 ```
@@ -108,8 +109,11 @@ javaw -jar server-1.0-SNAPSHOT.jar
 ```bash
 javaw -jar server-1.0-SNAPSHOT.jar --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000 --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
 ```
+
+<br>
+
 #### Launching client:
-By default, IP is 127.0.0.1 and port is 20000.
+The client, by default, connects to a unicast host at 127.0.0.1 on port 10000 and a multicast host at 239.1.1.1 on port 20000.
 ```bash
 javaw -jar client-1.0-SNAPSHOT.jar [--unicast-host=host] [--unicast-port=port] [--multicast-host=host] [--multicast-port=port]
 ```
@@ -123,33 +127,17 @@ javaw -jar client-1.0-SNAPSHOT.jar --unicast-host=192.168.1.10 --unicast-port=40
 
 <br>
 
-### Linux
-For launching applications on Linux, use the `java` command.
-
-#### Launching server:
-By default, port is 20000.
+#### Launching viewer:
+By default, the viewer connects to a multicast stream host at 239.1.1.2 on port 20001.
 ```bash
-java -jar server-1.0-SNAPSHOT.jar [--unicast-port=port] [--multicast-host=host] [--multicast-port=port] [--multicast-stream-host=host] [--multicast-stream-port=port]
+javaw -jar viewer-1.0-SNAPSHOT.jar [--multicast-stream-host=host] [--multicast-stream-port=port]
 ```
 Examples:
-```bash
-java -jar server-1.0-SNAPSHOT.jar
+```
+javaw -jar viewer-1.0-SNAPSHOT.jar
 ```
 ```bash
-java -jar server-1.0-SNAPSHOT.jar --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000 --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
-```
-
-#### Launching client:
-By default, IP is 127.0.0.1 and port is 20000.
-```bash
-java -jar client-1.0-SNAPSHOT.jar [--unicast-host=host] [--unicast-port=port] [--multicast-host=host] [--multicast-port=port]
-```
-Examples:
-```bash
-java -jar client-1.0-SNAPSHOT.jar
-```
-```bash
-java -jar client-1.0-SNAPSHOT.jar --unicast-host=192.168.1.10 --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000
+javaw -jar viewer-1.0-SNAPSHOT.jar --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
 ```
 
 <br>
