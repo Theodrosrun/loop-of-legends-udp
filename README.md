@@ -51,70 +51,93 @@ Ensure you have the Java Runtime Environment 17 (JRE) or Java Development Kit 17
   ```
 
 ### Step 3: Dependencies
-- TODO
+
+1. **Logback Classic**
+    - Group ID: `ch.qos.logback`
+    - Artifact ID: `logback-classic`
+    - Version: `1.4.11`
+
+2. **Picocli**
+    - Group ID: `info.picocli`
+    - Artifact ID: `picocli`
+    - Version: `4.7.5`
+
+3. **Lanterna**
+    - Group ID: `com.googlecode.lanterna`
+    - Artifact ID: `lanterna`
+    - Version: `3.1.1`
+
 ---
 
-## 2. Running the Application
+## 2.1 Running the Application with Docker
+
+### Explanation on Using Lanterna with Docker
+
+As part of our project, we have prepared Dockerfiles and a `docker-compose.yml` file to facilitate the deployment and management of our Docker containers. However, it's important to address a significant limitation related to the use of the Lanterna library in the Docker environment.
+
+#### The Challenge of Lanterna in Docker
+Lanterna is a Java library designed for creating text-based user interfaces in a terminal. While it's extremely useful for CLI (Command Line Interface) applications, its compatibility with Docker can be problematic. Lanterna requires a terminal (TTY) environment to function properly, which can present challenges in a Docker container, particularly when attempting to achieve graphical mode interaction or an interactive user interface.
+
+#### Docker Images Created for Indicative Purposes
+Due to this limitation, the Docker images we created for the server, client, and viewer of the project should be considered primarily for indicative purposes. Although the Dockerfiles and `docker-compose.yml` are technically correct and functional, they may not provide an optimal user experience with Lanterna due to the constraints of the Docker environment.
+
+#### Solutions and Alternatives
+For those interested in experimenting with the project in Docker, it is possible to attempt alternative configurations, such as setting up a pseudo-TTY or using Docker in interactive mode. However, these solutions may not fully resolve the issues of interaction with the Lanterna user interface.
+
+#### Conclusion
+We encourage users to consider this limitation when using our Docker images with Lanterna. For an optimal experience, it may be preferable to run the application directly on a host machine with an adequate terminal environment, outside of a Docker container.
+
+---
+
+## 2.2 Running the Application
 
 All commands below must be performed in the target folder.
 
-### Windows
-For launching applications on Windows, use the `javaw` command.
+For launching applications on Windows, use the `javaw` command, while on Linux, use the same command but with `java` instead of `javaw`.
+
+<br>
 
 #### Launching server:
-By default, port is 20000.
+By default, the server listens on unicast port 10000 and multicast port 20000, with multicast host address set to 239.1.1.1. Additionally, it streams to a multicast stream host 239.1.1.2 on port 20001.
 ```bash
-javaw -jar server-1.0-SNAPSHOT.jar [port]
+javaw -jar server-1.0-SNAPSHOT.jar [--unicast-port=port] [--multicast-host=host] [--multicast-port=port] [--multicast-stream-host=host] [--multicast-stream-port=port]
 ```
 Examples:
 ```bash
 javaw -jar server-1.0-SNAPSHOT.jar
 ```
 ```bash
-javaw -jar server-1.0-SNAPSHOT.jar 40000
+javaw -jar server-1.0-SNAPSHOT.jar --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000 --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
 ```
+
+<br>
+
 #### Launching client:
-By default, IP is 127.0.0.1 and port is 20000.
+The client, by default, connects to a unicast host at 127.0.0.1 on port 10000 and a multicast host at 239.1.1.1 on port 20000.
 ```bash
-javaw -jar client-1.0-SNAPSHOT.jar [server-address] [port]
+javaw -jar client-1.0-SNAPSHOT.jar [--unicast-host=host] [--unicast-port=port] [--multicast-host=host] [--multicast-port=port]
 ```
 Examples:
 ```bash
 javaw -jar client-1.0-SNAPSHOT.jar
 ```
 ```bash
-javaw -jar client-1.0-SNAPSHOT.jar 192.168.1.10 40000
+javaw -jar client-1.0-SNAPSHOT.jar --unicast-host=192.168.1.10 --unicast-port=40000 --multicast-host=239.1.1.1 --multicast-port=20000
 ```
 
 <br>
 
-### Linux
-For launching applications on Linux, use the `java` command.
-
-#### Launching server:
-By default, port is 20000.
+#### Launching viewer:
+By default, the viewer connects to a multicast stream host at 239.1.1.2 on port 20001.
 ```bash
-java -jar server-1.0-SNAPSHOT.jar [port]
+javaw -jar viewer-1.0-SNAPSHOT.jar [--multicast-stream-host=host] [--multicast-stream-port=port]
 ```
 Examples:
-```bash
-java -jar server-1.0-SNAPSHOT.jar
+```
+javaw -jar viewer-1.0-SNAPSHOT.jar
 ```
 ```bash
-java -jar server-1.0-SNAPSHOT.jar 40000
-```
-
-#### Launching client:
-By default, IP is 127.0.0.1 and port is 20000.
-```bash
-java -jar client-1.0-SNAPSHOT.jar [server-address] [port]
-```
-Examples:
-```bash
-java -jar client-1.0-SNAPSHOT.jar
-```
-```bash
-java -jar client-1.0-SNAPSHOT.jar 192.168.1.10 40000
+javaw -jar viewer-1.0-SNAPSHOT.jar --multicast-stream-host=239.1.1.2 --multicast-stream-port=20001
 ```
 
 <br>
@@ -157,9 +180,17 @@ The Loop of Legend (LOL) protocol is designed specifically for online multiplaye
 - To start a game, a client connects to the server and requests to join a game. The game begins when the lobby has sufficient players, and all players indicate they are ready.
 
 ## 3.2 Transport protocol
-### Protocol and port
-- **Protocol**: TCP (Transmission Control Protocol) for reliable, ordered, and error-checked delivery of game data.
-- **Port**: The default communication port for the LOL protocol is 20000.
+### Unicast Protocol and Port
+- **Protocol**: TCP (Transmission Control Protocol) is used for reliable, ordered, and error-checked delivery of game data.
+- **Port**: The default unicast communication port for the game server is `10000`.
+
+### Multicast Protocol and Port
+- **Protocol**: UDP (User Datagram Protocol) for multicast communication, providing efficient data distribution among multiple clients.
+- **Port**: The default multicast port used for game data broadcasting is `20000`, with the multicast address set to `239.1.1.1`.
+
+### Streaming Protocol and Port
+- **Protocol**: UDP is also used for streaming game updates.
+- **Port**: The game streaming data is sent over the multicast port `20001`, using the multicast stream host address `239.1.1.2`.
 
 ### Connection Initiation
 - The connection is initiated by the client.
@@ -201,8 +232,6 @@ Common messages
 - **Socket Closed/Disconnection**: If the client's connection to the server is unexpectedly closed (e.g., due to a socket closure), the client's termnal will display a notification message to the user. This message informs the user about the disconnection. This straightforward communication helps the user understand that the issue is related to the network connection and guides them on the immediate steps they can take. The client's application is responsible for detecting when the socket has been closed.
 
 ## 3.4 Examples
-### Client plays - Single player:
-![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/clientPlays.png)
 ### Clients play - Multiplayers:
 ![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/clientsPlay.png)
 ### Client leaves:
@@ -211,5 +240,3 @@ Common messages
 ![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/lobbyIsFull.png)
 ### Username Already Taken:
 ![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/feature/improving-readme/docs/usernameAlreadyTaken.png)
-### Socket closed:
-![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/socketClosed.png)
