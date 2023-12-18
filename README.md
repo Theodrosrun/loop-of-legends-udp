@@ -224,8 +224,6 @@ Common messages
 - **Socket Closed/Disconnection**: If the client's connection to the server is unexpectedly closed (e.g., due to a socket closure), the client's termnal will display a notification message to the user. This message informs the user about the disconnection. This straightforward communication helps the user understand that the issue is related to the network connection and guides them on the immediate steps they can take. The client's application is responsible for detecting when the socket has been closed.
 
 ## 3.4 Examples
-### Client plays - Single player:
-![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/clientPlays.png)
 ### Clients play - Multiplayers:
 ![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/clientsPlay.png)
 ### Client leaves:
@@ -234,5 +232,3 @@ Common messages
 ![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/lobbyIsFull.png)
 ### Username Already Taken:
 ![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/feature/improving-readme/docs/usernameAlreadyTaken.png)
-### Socket closed:
-![Example Image](https://github.com/Theodrosrun/loop-of-legends/blob/23-protocol-finalization/docs/socketClosed.png)
