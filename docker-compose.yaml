@@ -2,12 +2,19 @@ services:
   LoopOfLegendServer:
     image: loop_of_legends_server:v1.0.0
     command:
-      - --Adapter=eth0
+      - --unicast-host=127.0.0.1
+      - --unicast-port=10000
+      - --multicast-host=239.1.1.1
+      - --multicast-port=20000
+      - --multicast-stream-host=239.1.1.2
+      - --multicast-stream-port=20001
   client:
     image: loop_of_legends_client:v1.0.0
     command:
-      - --Adapter=eth0
-      - --DefaultHost=LoopOfLegendServer
+      - --unicast-host=127.0.0.1
+      - --unicast-port=10000
+      - --multicast-host=239.1.1.1
+      - --multicast-port=20000
     depends_on:
       - LoopOfLegendServer
     stdin_open: true
@@ -15,8 +22,8 @@ services:
   viewer:
     image: loop_of_legends_viewer:v1.0.0
     command:
-      - --Adapter=eth0
-      - --DefaultHost=LoopOfLegendServer
+      - --multicast-stream-host=239.1.1.2
+      - --multicast-stream-port=20001
     depends_on:
       - LoopOfLegendServer
     stdin_open: true
