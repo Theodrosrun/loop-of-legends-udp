@@ -12,6 +12,7 @@
         <module>lib</module>
         <module>server</module>
         <module>client</module>
+        <module>viewer</module>
     </modules>
 
     <properties>
