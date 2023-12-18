@@ -9,8 +9,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
-public class Server {
+@Command(name = "Server", mixinStandardHelpOptions = true, version = "Server 1.0",
+        description = "Starts the game server.")
+public class Server implements Runnable {
     // Game configuration
     private static final int NB_PLAYERS = 4;
     private UUID uuid;
@@ -22,59 +27,33 @@ public class Server {
     private static final int UNICAST_NB_EXECUTORS = 1;
     private static final int UNICAST_NB_THREADS = 10;
     private DatagramSocket unicastSocket;
+    @Option(names = {"-up", "--unicast-port"}, description = "Unicast port number.")
+    private int unicastPort = 10000;
     private ExecutorService unicastExecutorService;
 
     // Mulitcast
     private static final long INIT_DELAY = 100;
     private static final int PERIOD = GAME_FREQUENCY / 2;
-    private final MulticastSocket multicastSocket;
-    private final InetAddress multicastAddress;
-    private final InetSocketAddress multicastGroup;
+    private MulticastSocket multicastSocket;
+    @Option(names = {"-mh", "--multicast-host"}, description = "Multicast host address.")
+    private String multicastHost = "239.1.1.1";
+    @Option(names = {"-mp", "--multicast-port"}, description = "Multicast port number.")
+    private int multicastPort = 20000;
+    private InetAddress multicastAddress;
+    private InetSocketAddress multicastGroup;
 
     // Mutlicast stream
-    private final MulticastSocket multicastStreamSocket;
-    private final InetAddress multicastStreamAddress;
-    private final InetSocketAddress multicastStreamGroup;
+    private MulticastSocket multicastStreamSocket;
+    @Option(names = {"-msh", "--multicast-stream-host"}, description = "Multicast stream host address.")
+    private String multicastStreamHost = "239.1.1.2";
+    @Option(names = {"-msp", "--multicast-stream-port"}, description = "Multicast stream port number.")
+    private int multicastStreamPort = 20001;
+    private InetAddress multicastStreamAddress;
+    private InetSocketAddress multicastStreamGroup;
 
     // Mulitcast config
     private NetworkInterface multicastNetworkInterface;
     private ScheduledExecutorService multicastScheduledExecutorService;
-
-    /**
-     * Server constructor. Initializes sockets and executor services for unicast and multicast communications.
-     *
-     * @param unicastPort          Port for unicast communication.
-     * @param multicastPort        Port for multicast communication.
-     * @param multicastHost        Host for multicast communication.
-     * @param multicastStreamPort  Port for multicast stream.
-     * @param multicastStreamHost  Host for multicast stream.
-     */
-    Server(int unicastPort, int multicastPort, String multicastHost, int multicastStreamPort, String multicastStreamHost) {
-        uuid = UUID.randomUUID();
-        try {
-            // Unicast
-            this.unicastSocket = new DatagramSocket(unicastPort);
-            this.unicastExecutorService = Executors.newFixedThreadPool(UNICAST_NB_EXECUTORS);
-            this.unicastExecutorService.submit(new ServerReceiver(this, unicastSocket, UNICAST_NB_THREADS));
-
-            // Multicast
-            this.multicastSocket = new MulticastSocket(multicastPort);
-            this.multicastAddress = InetAddress.getByName(multicastHost);
-            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
-            NetworkInterfaceSelector selector = new NetworkInterfaceSelector();
-            this.multicastNetworkInterface = selector.selectNetworkInterface();
-            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
-            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
-
-            // Multicast stream
-            this.multicastStreamSocket = new MulticastSocket(multicastStreamPort);
-            this.multicastStreamAddress = InetAddress.getByName(multicastStreamHost);
-            this.multicastStreamGroup = new InetSocketAddress(multicastStreamAddress, multicastStreamPort);
-            this.multicastStreamSocket.joinGroup(multicastStreamGroup, multicastNetworkInterface);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Retrieves a player by their UUID.
@@ -254,20 +233,41 @@ public class Server {
         }
     }
 
+    @Override
+    public void run() {
+        try {
+            uuid = UUID.randomUUID();
+
+            // Unicast
+            this.unicastSocket = new DatagramSocket(unicastPort);
+            this.unicastExecutorService = Executors.newFixedThreadPool(UNICAST_NB_EXECUTORS);
+            this.unicastExecutorService.submit(new ServerReceiver(this, unicastSocket, UNICAST_NB_THREADS));
+
+            // Multicast
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = InetAddress.getByName(multicastHost);
+            this.multicastGroup = new InetSocketAddress(multicastAddress, multicastPort);
+            NetworkInterfaceSelector selector = new NetworkInterfaceSelector();
+            this.multicastNetworkInterface = selector.selectNetworkInterface();
+            this.multicastSocket.joinGroup(multicastGroup, multicastNetworkInterface);
+            this.multicastScheduledExecutorService = Executors.newScheduledThreadPool(UNICAST_NB_EXECUTORS);
+
+            // Multicast stream
+            this.multicastStreamSocket = new MulticastSocket(multicastStreamPort);
+            this.multicastStreamAddress = InetAddress.getByName(multicastStreamHost);
+            this.multicastStreamGroup = new InetSocketAddress(multicastStreamAddress, multicastStreamPort);
+            this.multicastStreamSocket.joinGroup(multicastStreamGroup, multicastNetworkInterface);
+
+            sendMulticast();
+            start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     public static void main(String[] args) {
-        // Unicast
-        int unicastPort = 10000;
-
-        // Multicast
-        String multicastHost = "239.1.1.1";
-        int multicastPort = 20000;
-
-        // Multicast stream
-        String multicastStreamHost = "239.1.1.2";
-        int multicastStreamPort = 20001;
-
-        Server server = new Server(unicastPort, multicastPort, multicastHost, multicastStreamPort, multicastStreamHost);
-        server.sendMulticast();
-        server.start();
+        int exitCode = new CommandLine(new Server()).execute(args);
+        System.exit(exitCode);
     }
 }
