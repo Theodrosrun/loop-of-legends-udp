@@ -1,6 +1,6 @@
 services:
   LoopOfLegendServer:
-    image: loop_of_legends_server:v1.0
+    image: ghcr.io/theodrosrun/loop_of_legends_server:v1.0
     stdin_open: true
     tty: true
     command:
@@ -10,7 +10,7 @@ services:
       - --multicast-stream-host=239.1.1.2
       - --multicast-stream-port=20001
   client:
-    image: loop_of_legends_client:v1.0
+    image: ghcr.io/theodrosrun/loop_of_legends_client:v1.0
     stdin_open: true
     tty: true
     command:
@@ -21,7 +21,7 @@ services:
     depends_on:
       - LoopOfLegendServer
   viewer:
-    image: loop_of_legends_viewer:v1.0
+    image: ghcr.io/theodrosrun/loop_of_legends_viewer:v1.0
     stdin_open: true
     tty: true
     command:
